@@ -27,7 +27,7 @@ public class Rule_Bolt implements IBasicBolt{
 	private BasicOutputCollector outputCollector;
 	private ArrayList<Rule_Header> rule_set;
 //	public FileWriter fwRule ;
-//	public FileWriter fwVol ;
+	public FileWriter fw ;
 	
 	private String name_bolt;
 	private int packnum ;
@@ -70,11 +70,11 @@ public class Rule_Bolt implements IBasicBolt{
 	public void prepare(Map stormConf, TopologyContext context) {
 		packnum = 0;
 		rule_set = new ArrayList<Rule_Header>(500);
-//		try {
+		try {
 //			if(name_bolt.equals("RuleBolt1")){
 //				ruleBoltType = 1;
 //				fwRule = new FileWriter("//opt//res4Snort//rulespout_ruleBolt1");
-//				fwVol = new FileWriter("//opt//res4Snort//volspout_ruleBolt1");
+				fw = new FileWriter("//opt//res4Snort//headerMatch");
 //			}
 //			else if(name_bolt.equals("RuleBolt2")){
 //				ruleBoltType = 2;
@@ -86,9 +86,9 @@ public class Rule_Bolt implements IBasicBolt{
 //				fwRule = new FileWriter("//opt//res4Snort//rulespout_ruleBolt3");
 //				fwVol = new FileWriter("//opt//res4Snort//volspout_ruleBolt3");
 //			}
-//		}catch(IOException e){
-//			System.out.println(e.getMessage());
-//		}
+		}catch(IOException e){
+			System.out.println(e.getMessage());
+		}
 			
 			
 		
@@ -144,9 +144,18 @@ public class Rule_Bolt implements IBasicBolt{
 					//System.out.println("in rule set this is"+i+" rule set size is:"+rule_set.size());
 					
 					if(rule_set.get(i).match(pcaket_tmp)){//选择规则选项匹配的规则进行处理
-						System.out.println("the ruleset header match the packet header");
-						//DealOption dp = new DealOption(rule_set.get(i),pcaket_tmp,detect);
-						//detect = dp.run();
+						try {
+							fw.write("the ruleset header match the packet header\n");
+						
+						fw.write("before detect\n");
+						DealOption dp = new DealOption(rule_set.get(i),pcaket_tmp,detect);
+						detect = dp.run();
+						fw.write("after detect\n");
+						fw.flush();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						
 					}
 				}
