@@ -63,7 +63,7 @@ public class PcapTopo4jnetpcap {
 //			 builder.setBolt("ResultBolt", new Result_Bolt(),1).allGrouping("RuleBolt1").allGrouping("RuleBolt2").allGrouping("RuleBolt3");
 //			 
 			 builder.setSpout("RuleSpout", new Rule_Spout(), 1);
-			 builder.setSpout("VolumeSpout", new Volume_Spout(null,-1,null,"local",null,-1,"topic2"), 1);
+			 builder.setSpout("VolumeSpout", new Volume_Spout(null,-1,null,null,null,-1,"topic2"), 1);
 			 //builder.setBolt("TransferBolt", new Transfer_Bolt(),1).allGrouping("VolumeSpout","volume").allGrouping("RuleSpout","switch");
 			 builder.setBolt("RuleBolt1", new Rule_Bolt("RuleBolt1"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
 			 builder.setBolt("RuleBolt2", new Rule_Bolt("RuleBolt2"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");

@@ -50,7 +50,7 @@ public class Rule_Spout implements IRichSpout {
 		this.outputCollector = spoutOutputCollector;		
         try {  	
         	if(ruleFile.equals("")){
-        		fis = new FileInputStream("//opt//res4Snort//small_rules.txt");
+        		fis = new FileInputStream("//opt//res4Snort//special_rules");
         	}
         	else
         		fis = new FileInputStream(ruleFile);
@@ -76,7 +76,7 @@ public class Rule_Spout implements IRichSpout {
 				
 				count++;
 				///***///
-				System.out.println("count:"+count);
+				//System.out.println("count:"+count);
 				String aaa="\\(";
 				String rule_header=null;
 				String rule_option=null;
@@ -85,10 +85,10 @@ public class Rule_Spout implements IRichSpout {
 				if (matcher_web.find()) {
 					rule_header = str.substring(0, matcher_web.start());
 					///***///
-					System.out.println("rule_header:"+rule_header);
+					//System.out.println("rule_header:"+rule_header);
 					rule_option = str.substring(matcher_web.start(),str.length());
 					///***///
-					System.out.println("rule_option:"+rule_option);
+					//System.out.println("rule_option:"+rule_option);
 					
 					String tmp[]=rule_header.split(" ");
 					Rule_Header tmp_header = new Rule_Header(tmp,rule_option);
@@ -114,10 +114,10 @@ public class Rule_Spout implements IRichSpout {
 					for(int i = 0;i < rhset_size; i++){
 						this.outputCollector.emit("rule",new Values(rhset.get(i).action,rhset.get(i).protocol,rhset.get(i).sip,rhset.get(i).sport,rhset.get(i).direction,rhset.get(i).dip,rhset.get(i).dport,rhset.get(i).rule_option,false));
 						///***///
-						System.out.println("No.:"+i+",rule_option.size:"+rhset.get(i).rule_option.size()+",action:"+rhset.get(i).action+",protocol:"+rhset.get(i).protocol+",sip:"+rhset.get(i).sip+",sport:"+rhset.get(i).sport+",direction:"+rhset.get(i).direction+",dip:"+rhset.get(i).dip+",dport:"+rhset.get(i).dport);
-						for(int j=0; j<rhset.get(i).rule_option.size(); j++) {
-							System.out.println("here:"+rhset.get(i).rule_option.get(j));
-						}
+						//System.out.println("No.:"+i+",rule_option.size:"+rhset.get(i).rule_option.size()+",action:"+rhset.get(i).action+",protocol:"+rhset.get(i).protocol+",sip:"+rhset.get(i).sip+",sport:"+rhset.get(i).sport+",direction:"+rhset.get(i).direction+",dip:"+rhset.get(i).dip+",dport:"+rhset.get(i).dport);
+//						for(int j=0; j<rhset.get(i).rule_option.size(); j++) {
+//							System.out.println("here:"+rhset.get(i).rule_option.get(j));
+//						}
 					}
 					this.outputCollector.emit("rule",new Values("action","protocol","sip","sport","direction","dip","dport","option",true));
 				}

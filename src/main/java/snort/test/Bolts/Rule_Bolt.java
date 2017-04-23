@@ -27,7 +27,8 @@ public class Rule_Bolt implements IBasicBolt{
 	private BasicOutputCollector outputCollector;
 	private ArrayList<Rule_Header> rule_set;
 //	public FileWriter fwRule ;
-//	public FileWriter fwVol ;
+	public FileWriter fw ;
+	
 	
 	private String name_bolt;
 	private int packnum ;
@@ -35,7 +36,9 @@ public class Rule_Bolt implements IBasicBolt{
 	  //private int ruleBoltType = 0;
 	
 	private long pktlen = 0;//record the transport flow
+	
 	private long startTime = 0;
+	private long duringTime = 0;
 	private boolean transfer = false;
 	
 	public Rule_Bolt(String nm){
@@ -70,11 +73,11 @@ public class Rule_Bolt implements IBasicBolt{
 	public void prepare(Map stormConf, TopologyContext context) {
 		packnum = 0;
 		rule_set = new ArrayList<Rule_Header>(500);
-//		try {
+		try {
 //			if(name_bolt.equals("RuleBolt1")){
 //				ruleBoltType = 1;
 //				fwRule = new FileWriter("//opt//res4Snort//rulespout_ruleBolt1");
-//				fwVol = new FileWriter("//opt//res4Snort//volspout_ruleBolt1");
+				fw = new FileWriter("//opt//res4Snort//headerMatch");
 //			}
 //			else if(name_bolt.equals("RuleBolt2")){
 //				ruleBoltType = 2;
@@ -86,9 +89,9 @@ public class Rule_Bolt implements IBasicBolt{
 //				fwRule = new FileWriter("//opt//res4Snort//rulespout_ruleBolt3");
 //				fwVol = new FileWriter("//opt//res4Snort//volspout_ruleBolt3");
 //			}
-//		}catch(IOException e){
-//			System.out.println(e.getMessage());
-//		}
+		}catch(IOException e){
+			System.out.println(e.getMessage());
+		}
 			
 			
 		
@@ -130,9 +133,10 @@ public class Rule_Bolt implements IBasicBolt{
 				pcaket_tmp.flags = (Integer)tuple.getValueByField("flags");
 				pcaket_tmp.seq = (Long)tuple.getValueByField("seq");
 				pcaket_tmp.window = (Integer)tuple.getValueByField("window");
+				pktlen += (Integer)tuple.getValueByField("total_len");
 	//			String p = BytetoString(pcaket_tmp.payload,pcaket_tmp.payload.length);
 				
-				System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
+				//System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
 				
 				//对数据包进行处
 				//System.out.println(" before deal with packet using rules");
@@ -141,14 +145,29 @@ public class Rule_Bolt implements IBasicBolt{
 				int rule_size = rule_set.size();
 				for(int i=0; i<rule_size; i++){
 					//System.out.println("in deal packet loop");
-					//System.out.println("in rule set this is"+i+" rule set size is:"+rule_set.size());
+					//System.out.println("the rule is"+rule_set.get(i).action+" "+rule_set.get(i).action+" "+rule_set.get(i).sip+" "+rule_set.get(i).sport+" "+rule_set.get(i).dip+" "+rule_set.get(i).dport);
 					
 					if(rule_set.get(i).match(pcaket_tmp)){//选择规则选项匹配的规则进行处理
-						System.out.println("the ruleset header match the packet header");
-						//DealOption dp = new DealOption(rule_set.get(i),pcaket_tmp,detect);
-						//detect = dp.run();
+//						try {
+//							fw.write("the ruleset header match the packet header\n");
+//						
+//						fw.write("before detect\n");
+						DealOption dp = new DealOption(rule_set.get(i),pcaket_tmp,detect);
+						detect = dp.run();
+//						fw.write("after detect\n");
+//						fw.flush();
+//						} catch (IOException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
 						
 					}
+					//检测规则头匹配的效率
+//					rule_set.get(i).match(pcaket_tmp);
+//					duringTime = System.currentTimeMillis()-startTime;
+//					if((duringTime) % 100000 == 0)
+//						System.out.println("time:"+duringTime+";pktlen:"+pktlen+";packet:"+packnum);
+//					
 				}
 				this.outputCollector.emit(new Values(packnum, detect, pktlen));
 				
@@ -159,10 +178,10 @@ public class Rule_Bolt implements IBasicBolt{
 				
 				transfer = (Boolean)tuple.getValueByField("switch");
 				if(transfer) {
-					System.out.println("transfer==true");
+					//System.out.println("transfer==true");
 					return;
 				}
-				System.out.println("rule bolt for rule");
+				//System.out.println("rule bolt for rule");
 				Rule_Header rule_tmp = new Rule_Header();
 				rule_tmp.action=(String)tuple.getValueByField("action");
 				rule_tmp.protocol=(String)tuple.getValueByField("protocol");
