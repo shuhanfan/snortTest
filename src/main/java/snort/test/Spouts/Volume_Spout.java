@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -181,7 +182,7 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 			i++;
 			System.out.printf("#%d: %s [%s]\n", i, device.getName(), description);
 		}
-		System.out.println("bbbbbbbbbbbbbbbbbbthe final device num is:"+chooseid);
+		//System.out.println("bbbbbbbbbbbbbbbbbbthe final device num is:"+chooseid);
 		/*try {
 			fw.write("final device num is:"+chooseid);
 		} catch (IOException e) {
@@ -213,9 +214,9 @@ public class Volume_Spout implements Serializable,IRichSpout  {
         	if(srcFilename!=null){
         		//System.out.println("come to the srcFile is not null");
         	//	fw.write("open offline srcFile\n");
-        		//pcap=Pcap.openOffline(srcFilename, errbuf);
+        		pcap=Pcap.openOffline(srcFilename, errbuf);
         		pcap=Pcap.openOffline("//opt//res4Snort//inside.pcap", errbuf);
-        		//System.out.println("after open~~~~~~~~~~~~~~");
+        		System.out.println("after open~~~~~~~~~~~~~~");
         	
         		
         		if (pcap == null) {
@@ -276,6 +277,12 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 		    if(pcap.nextEx(packet)==1)
 			{
 				CreateValue cv = new CreateValue(packet);
+//				byte[] tmp = {0x05,0x3a,(byte) 0xf2,0x33,0x55,0x48,0x33,(byte) 0xcc,0x6a,(byte) 0x85,(byte) 0xb1,(byte) 0x85,0x45,(byte) 0xf8,(byte) 0x94,0x34,0x72,0x3c,(byte) 0xea,0x0b,(byte) 0xe4,0x34,0x47,0x40,(byte) 0xc1,(byte) 0xf6};
+//				if(!Arrays.equals(cv.payload, tmp))
+//					return;
+//				else {
+//					System.out.println("the same payload");
+//				}
 //				System.out.println("after packet_header");
 //		    	System.out.println(cv.protocol);
 //		    	System.out.println(cv.sip);
@@ -414,9 +421,9 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 //        		System.out.println(pktlen+","+ during_time +","+((double)pktlen/during_time));
 //		        this.outputCollector.emit("volume",new Values(pkheader.protocol,pkheader.sip,pkheader.sport,pkheader.dip,pkheader.dport,pkheader.dsize,pkheader.ip_proto,pkheader.DF,pkheader.MF,pkheader.Reserved,pkheader.ack,pkheader.start,pcapbuf));
 //        		
-        		this.outputCollector.emit("volume",new Values(cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.dsize,cv.ip_proto,cv.DF,cv.MF,cv.Reserved,cv.fragoffset,cv.ttl,cv.tos,cv.id,cv.flags,cv.seq,cv.ack,cv.window,cv.sameip,cv.payload));
+        		this.outputCollector.emit("volume",new Values(cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.dsize,cv.ip_proto,cv.DF,cv.MF,cv.Reserved,cv.fragoffset,cv.ttl,cv.tos,cv.id,cv.flags,cv.seq,cv.ack,cv.window,cv.sameip,cv.payload,cv.total_len));
 				///***///
-        		System.out.println("protocol:"+cv.protocol+",sip:"+cv.sip+",sport:"+cv.sport+",dip:"+cv.dip+",dport:"+cv.dport+",dsize:"+cv.dsize+",ip_proto:"+cv.ip_proto+",DF:"+cv.DF+",MF:"+cv.MF+",Reserved:"+cv.Reserved+",cv.fragoffset:"+cv.fragoffset+",cv.ttl:"+cv.ttl+",cv.tos:"+cv.tos+",cv.id:"+cv.id+",cv.flags"+cv.flags+",cv.seq:"+cv.seq+",cv.ack:"+cv.ack+",cv.window:"+cv.window+",cv.sameip:"+cv.sameip);
+        		//System.out.println("protocol:"+cv.protocol+",sip:"+cv.sip+",sport:"+cv.sport+",dip:"+cv.dip+",dport:"+cv.dport+",dsize:"+cv.dsize+",ip_proto:"+cv.ip_proto+",DF:"+cv.DF+",MF:"+cv.MF+",Reserved:"+cv.Reserved+",cv.fragoffset:"+cv.fragoffset+",cv.ttl:"+cv.ttl+",cv.tos:"+cv.tos+",cv.id:"+cv.id+",cv.flags"+cv.flags+",cv.seq:"+cv.seq+",cv.ack:"+cv.ack+",cv.window:"+cv.window+",cv.sameip:"+cv.sameip);
 
 	           
 				//System.out.println("this.outputCollector.emit(basic,new Values(p1.getCaptureHeader().seconds(), null , null,p1.getCaptureHeader().caplen()));");
@@ -436,7 +443,7 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 //		outputFieldsDeclarer.declareStream("basic",new Fields("sec","src","dst","len"));//后面bolt都依据这个方法来定义字段
 //		outputFieldsDeclarer.declareStream("udp",new Fields("sec","src","dst","len","src_port","dst_port"));
 //		outputFieldsDeclarer.declareStream("tcp",new Fields("sec","src","dst","len","src_port","dst_port"));
-		outputFieldsDeclarer.declareStream("volume",new Fields("protocol","sip","sport","dip","dport","dsize","ip_proto","DF","MF","Reserved","fragoffset","ttl","tos","id","flags","seq","ack","window","sameip","payload"));
+		outputFieldsDeclarer.declareStream("volume",new Fields("protocol","sip","sport","dip","dport","dsize","ip_proto","DF","MF","Reserved","fragoffset","ttl","tos","id","flags","seq","ack","window","sameip","payload","total_len"));
 		//outputFieldsDeclarer.declareStream("volume",new Fields("protocol","sip","sport","dip","dport"));
 		//outputFieldsDeclarer.declareStream("ip",new Fields("sec","src","dst","len"));
 		//outputFieldsDeclarer.declareStream("http",new Fields());

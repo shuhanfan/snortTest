@@ -18,6 +18,9 @@ import snort.test.Helpers.Rule_Header;
 public class test {
 	//for test rule filter
 	public static void main(String args[]) {
+		int h = 0B10001000;
+		System.out.println(h);
+	
 //		try {
 //			byte[] payload = {(byte) 128,(byte)128, (byte)128, (byte)128};	
 //			String oris;		

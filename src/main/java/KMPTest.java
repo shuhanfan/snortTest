@@ -12,7 +12,8 @@ public class KMPTest {
 		boolean negative = false;
 		byte[] b = new byte[]{65,66,67,68,69,65,66,72,73,74,65,66,43,65,66,67,68};
  		Map<Integer, ArrayList<Integer>> res = new HashMap<Integer, ArrayList<Integer>>();
-		boolean ret = DealOption.KMP(pat, b, 1, res, ignoreCase);
+ 		int pattern_len = 0;
+		int ret = DealOption.KMP(pat, b, 1, res, ignoreCase);
 		System.out.println(ret);
 		
 	}

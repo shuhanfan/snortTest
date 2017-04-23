@@ -4,8 +4,10 @@ public class haha {
 	// for test address match
 	public static void main(String[] args){
 		
-		int a = 4;
-		System.out.println(a&2);
+		int a = 0;
+		changePara(a);
+		System.out.println(a);
+		
 		
 		String rule_protocol = "tcp";
 		String rule_sip = "![10.1.1.1,10.1.0.4/24]";
@@ -46,6 +48,9 @@ public class haha {
 		
 		
 	}	
+	public static void changePara(int a) {
+		a = 9;
+	}
 		
 	public static boolean protocolMatch(String pk_protocol, String rule_protocol) {
 		if(rule_protocol.equals(pk_protocol)==false){//proto:ip(tcp(http)/udp/icmp/igmp)/arp/

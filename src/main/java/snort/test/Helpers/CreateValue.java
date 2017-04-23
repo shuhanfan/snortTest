@@ -30,6 +30,7 @@ public class CreateValue {
 	//ip options
 	public boolean sameip = false; //check if source ip is the same as destination ip
 	public int dsize = -1;//应用层长度
+	public int total_len = -1;//整个报文长度
 	public int MF = -1;
 	public int DF = -1;
 	public int Reserved = -1;
@@ -84,15 +85,21 @@ public class CreateValue {
 		//System.out.println("**************************");
 		//判断网络层协议
 		if(pkt.hasHeader(Ethernet.ID)) {
+			
 			ether = pkt.getHeader(new Ethernet());
 			int ether_type = ether.type();
+			total_len = ether.getPayloadLength() + 14;
+			//System.out.println("ether.getLength() is:"+ether.getLength());
+			
+			//System.out.println("ether.getPayloadLength() is:"+ether.getPayloadLength());
 			if(ether_type == 0x0800) {//ipv4
 				protocol = "ip";
+				
 				ip4 = pkt.getHeader(new Ip4());
 				sip = FormatUtils.ip(ip4.source());
 				dip = FormatUtils.ip(ip4.destination());
-				System.out.println("sip is:"+sip);
-				System.out.println("dip is:"+dip);
+				//System.out.println("sip is:"+sip);
+				//System.out.println("dip is:"+dip);
 				if(sip.equals(dip))
 					sameip = true;
 				MF = ip4.flags_MF();
@@ -111,11 +118,11 @@ public class CreateValue {
 					
 					//icmp attribute
 					
-					System.out.println("icmp_id = icmp.getId():"+icmp.getId());
-					System.out.println("icmp_hashcode = icmp.hashCode():"+icmp.hashCode());
-					System.out.println("itype = icmp.type():"+icmp.type());
-					System.out.println("icode = icmp.code():"+icmp.code());
-					System.out.println("icmp_id = icmp.getIndex():"+icmp.getIndex());							
+					//System.out.println("icmp_id = icmp.getId():"+icmp.getId());
+					//System.out.println("icmp_hashcode = icmp.hashCode():"+icmp.hashCode());
+					//System.out.println("itype = icmp.type():"+icmp.type());
+					//System.out.println("icode = icmp.code():"+icmp.code());
+					//System.out.println("icmp_id = icmp.getIndex():"+icmp.getIndex());							
 					return;
 					
 				}
@@ -132,8 +139,8 @@ public class CreateValue {
 					flags = tcp.flags();
 					seq = tcp.seq();
 					window = tcp.window();
-					System.out.println("tcp.seq():"+tcp.seq());
-					System.out.println("tcp.windows():"+tcp.window());
+					//System.out.println("tcp.seq():"+tcp.seq());
+					//System.out.println("tcp.windows():"+tcp.window());
 					
 					
 				
