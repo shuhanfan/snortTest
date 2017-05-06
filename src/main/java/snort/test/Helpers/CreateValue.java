@@ -66,27 +66,28 @@ public class CreateValue {
 	
 
 	//not need return
-	private Ethernet ether;
-	private Ip4 ip4;
-	private Ip6 ip6;
+	private Ethernet ether = new Ethernet();
+	private Ip4 ip4 = new Ip4();
+	private Ip6 ip6 = new Ip6();
 	
-	private Udp udp;
-	private Tcp tcp;
-	private Http http;
-	private Icmp icmp;
-	private Arp arp;
+	private Udp udp = new Udp();
+	private Tcp tcp = new Tcp();
+	private Http http = new Http();
+	private Icmp icmp = new Icmp();
+	private Arp arp = new Arp();
 	
 	
 	public CreateValue(){}
 	
 	
-	public CreateValue(PcapPacket pkt){
+	
+	public void anal(PcapPacket pkt){
 		//protocol = "ip";
 		//System.out.println("**************************");
 		//判断网络层协议
 		if(pkt.hasHeader(Ethernet.ID)) {
 			
-			ether = pkt.getHeader(new Ethernet());
+			 pkt.getHeader(ether);
 			int ether_type = ether.type();
 			total_len = ether.getPayloadLength() + 14;
 			//System.out.println("ether.getLength() is:"+ether.getLength());
@@ -95,43 +96,25 @@ public class CreateValue {
 			if(ether_type == 0x0800) {//ipv4
 				protocol = "ip";
 				
-				ip4 = pkt.getHeader(new Ip4());
+				pkt.getHeader(ip4);
 				sip = FormatUtils.ip(ip4.source());
 				dip = FormatUtils.ip(ip4.destination());
 				//System.out.println("sip is:"+sip);
 				//System.out.println("dip is:"+dip);
 				if(sip.equals(dip))
 					sameip = true;
+//test
 				MF = ip4.flags_MF();
 				DF = ip4.flags_DF();
 				Reserved = ip4.flags_Reserved();
 				fragoffset = ip4.offset();
 				ttl = ip4.ttl();
-				tos = ip4.tos();
-				id = ip4.id();				
+				tos = ip4.tos();				
+				id = ip4.id();
+				
 				ip_proto = ip4.type();
-				if(ip_proto == 1) {//icmp
-					icmp = pkt.getHeader(new Icmp());
-					protocol = "icmp";
-					payload = icmp.getPayload();
-					dsize = icmp.getPayloadLength();
-					
-					//icmp attribute
-					
-					//System.out.println("icmp_id = icmp.getId():"+icmp.getId());
-					//System.out.println("icmp_hashcode = icmp.hashCode():"+icmp.hashCode());
-					//System.out.println("itype = icmp.type():"+icmp.type());
-					//System.out.println("icode = icmp.code():"+icmp.code());
-					//System.out.println("icmp_id = icmp.getIndex():"+icmp.getIndex());							
-					return;
-					
-				}
-				else if (ip_proto == 2) {//igmp
-					protocol = "igmp";
-					
-				}
-				else if (ip_proto == 6) {//tcp
-					tcp = pkt.getHeader(new Tcp());
+				if (pkt.hasHeader(Tcp.ID)) {//tcp6
+					pkt.getHeader(tcp);
 					protocol = "tcp";
 					sport = tcp.source();
 					dport = tcp.destination();
@@ -151,8 +134,8 @@ public class CreateValue {
 					}
 					
 				}
-				else if(ip_proto == 17) {//udp
-					udp = pkt.getHeader(new Udp());
+				else if(pkt.hasHeader(Udp.ID)) {//udp17
+					pkt.getHeader(udp);
 					protocol = "udp";
 					sport = udp.source();
 					dport = udp.destination();
@@ -161,6 +144,26 @@ public class CreateValue {
 					return;	
 					
 				}
+				else if(pkt.hasHeader(Icmp.ID)) {//icmp1
+					pkt.getHeader(icmp);
+					protocol = "icmp";
+					payload = icmp.getPayload();
+					dsize = icmp.getPayloadLength();
+					
+					//icmp attribute
+					
+					//System.out.println("icmp_id = icmp.getId():"+icmp.getId());
+					//System.out.println("icmp_hashcode = icmp.hashCode():"+icmp.hashCode());
+					//System.out.println("itype = icmp.type():"+icmp.type());
+					//System.out.println("icode = icmp.code():"+icmp.code());
+					//System.out.println("icmp_id = icmp.getIndex():"+icmp.getIndex());							
+					return;
+					
+				}
+//				else if (pkt.hasHeader(Igmp.ID)) {//igmp2
+//					protocol = "igmp";
+//					
+//				}
 				else {//other protocol or ip protocol
 					payload = ip4.getPayload();
 					dsize = ip4.getPayloadLength();	
@@ -171,11 +174,11 @@ public class CreateValue {
 			}
 			else if(ether_type == 0x86dd) {//ipv6
 				protocol = "ip";
-				ip6 = pkt.getHeader(new Ip6());
+				pkt.getHeader(ip6);
 				sip = IPv6BytetoString(ip6.source(), ip6.source().length);
 				dip = IPv6BytetoString(ip6.destination(), ip6.destination().length);
 				if(pkt.hasHeader(Icmp.ID)) {
-					icmp = pkt.getHeader(new Icmp());
+					pkt.getHeader(icmp);
 					protocol = "icmp";
 					ip_proto = 1;
 					payload = icmp.getPayload();
@@ -183,7 +186,7 @@ public class CreateValue {
 					return;
 				}
 				else if(pkt.hasHeader(Udp.ID)) {
-					udp = pkt.getHeader(new Udp());
+					pkt.getHeader(udp);
 					protocol = "udp";
 					ip_proto = 17;
 					sport = udp.source();
@@ -193,7 +196,7 @@ public class CreateValue {
 					return;		
 				}
 				else if(pkt.hasHeader(Tcp.ID)){
-					tcp = pkt.getHeader(new Tcp());
+					pkt.getHeader(tcp);
 					protocol = "tcp";
 					ip_proto = 6;
 					sport = tcp.source();
@@ -212,13 +215,12 @@ public class CreateValue {
 			}
 			else if(ether_type == 0x0806) {//arp
 				protocol = "arp";
-				arp = pkt.getHeader(new Arp());
+				pkt.getHeader(arp);
 				payload = arp.getPayload();
 				dsize = arp.getPayloadLength();
 			}
 		}		
 	}
-	
 	
 	public String IPv6BytetoString (byte[] a,int length)
 	{

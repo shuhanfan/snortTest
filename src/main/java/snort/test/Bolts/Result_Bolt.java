@@ -27,9 +27,10 @@ public class Result_Bolt implements IBasicBolt{
 	public FileOutputStream out;
 	public FileWriter fw ;
 	private String name_bolt;
-	private int pack1, pack2, pack3, detect1, detect2, detect3;
-	private long flow1, flow2,flow3;
-	private long startTime;
+	private int rpack1, rpack2, rpack3, ppack1, ppack2, ppack3, detect1, detect2, detect3;
+	private long rflow1, rflow2,rflow3, pflow1, pflow2, pflow3;
+	private long lastTime;
+	private long curTime;
 	
 	public Result_Bolt(){}
 	public Result_Bolt(String nm){
@@ -49,9 +50,9 @@ public class Result_Bolt implements IBasicBolt{
 		//////////////
 		try {
 			fw = new FileWriter("//opt//res4Snort//Result");
-			startTime = System.currentTimeMillis();
-			pack1 = pack2 = pack3 =detect1 =detect2 = detect3 = 0;
-			flow1 = flow2 =flow3 = 0;
+			lastTime = System.currentTimeMillis();
+			rpack1 = rpack2 = rpack3 = ppack1 = ppack2 = ppack3 =detect1 =detect2 = detect3 = 0;
+			rflow1 = rflow2 = rflow3 = pflow1 = pflow2 = pflow3 = 0;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -70,29 +71,48 @@ public class Result_Bolt implements IBasicBolt{
 		//////////////
 		try {
 			if(name.equals("RuleBolt1")){
-				pack1 = (Integer)tuple.getValueByField("packnum");
-				detect1 = (Integer)tuple.getValueByField("detect");
-				flow1 = (Long)tuple.getValueByField("flow")*8;//转化成bit
+				rpack1 = (Integer)tuple.getValueByField("packnum");
+				rflow1 = (Long)tuple.getValueByField("flow")*8;//转化成bit
 			}
 			else if(name.equals("RuleBolt2")){
-				pack2 = (Integer)tuple.getValueByField("packnum");
+				rpack2 = (Integer)tuple.getValueByField("packnum");
+				rflow2 = (Long)tuple.getValueByField("flow")*8;
+			////System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
+			}
+			else if(name.equals("RuleBolt3")){
+				rpack3 = (Integer)tuple.getValueByField("packnum");
+				rflow3 = (Long)tuple.getValueByField("flow")*8;
+			////System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
+			}
+			else if(name.equals("PayloadBolt1")){
+				ppack1 = (Integer)tuple.getValueByField("packnum");
+				detect1 = (Integer)tuple.getValueByField("detect");
+				//System.out.println("the received detect1 is:"+detect1);
+				pflow1 = (Long)tuple.getValueByField("flow")*8;//转化成bit
+			}
+			else if(name.equals("PayloadBolt2")){
+				ppack2 = (Integer)tuple.getValueByField("packnum");
 				detect2 = (Integer)tuple.getValueByField("detect");
-				flow2 = (Long)tuple.getValueByField("flow")*8;
-			//System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
+				//System.out.println("the received detect2 is:"+detect2);
+				pflow2 = (Long)tuple.getValueByField("flow")*8;
+			////System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
 			}
-			else {
-				pack3 = (Integer)tuple.getValueByField("packnum");
+			else if(name.equals("PayloadBolt3")){
+				ppack3 = (Integer)tuple.getValueByField("packnum");
 				detect3 = (Integer)tuple.getValueByField("detect");
-				flow3 = (Long)tuple.getValueByField("flow")*8;
-			//System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
+				//System.out.println("the received detect3 is:"+detect3);
+				pflow3 = (Long)tuple.getValueByField("flow")*8;
+			////System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
 			}
-			long total_flow = (flow1+flow2+flow3)*8;
-		    long during_time = System.currentTimeMillis()-startTime;
-		    if(during_time%1000==0) {
+			long total_flow = (rflow1+ rflow2+ rflow3 + pflow1 + pflow2 + pflow3);
+			curTime = System.currentTimeMillis();
+		    long during_time = curTime-lastTime;
+		    if(during_time/1000>0) {
 		    	double rate = (double)total_flow / during_time;
-		    	fw.write("1:"+detect1+"/"+pack1+"/"+flow1+" ;2:"+detect2+"/"+pack2+"/"+flow2+" ;3:"+detect3+"/"+pack3+"/"+flow3+" ;total:"+(detect1+detect2+detect3)+"/"+(pack1+pack2+pack3)+"/"+total_flow+ " ;time: "+ during_time+" ;rate:/kbps: "+rate+"\n");
+		    	fw.write("1:"+ rpack1+"/"+ rflow1+" ;2:"+rpack2+"/"+rflow2+" ;3:"+rpack3+"/"+rflow3+"4:"+detect1+"/"+ ppack1+"/"+ pflow1+" ;5:"+detect2+"/"+ppack2+"/"+pflow2+" ;6:"+detect3+"/"+ppack3+"/"+pflow3+" ;total:"+(detect1+detect2+detect3)+"/"+(rpack1+rpack2+rpack3+ppack1+ppack2+ppack3)+"/"+total_flow+ " ;time: "+ during_time+" ;rate:/kbps: "+rate+"\n");
 //		    	if(during_time%60000==0)
 //		    		fw.flush();
+		    	lastTime = curTime;
 		    }
 		} catch(FailedException e) {
 	    	System.out.println("Bolt fail to deal with packet");

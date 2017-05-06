@@ -66,10 +66,13 @@ public class PcapTopo4jnetpcap {
 			 builder.setSpout("VolumeSpout", new Volume_Spout(null,-1,null,null,null,-1,"topic2"), 1);
 			 //builder.setBolt("TransferBolt", new Transfer_Bolt(),1).allGrouping("VolumeSpout","volume").allGrouping("RuleSpout","switch");
 			 builder.setBolt("RuleBolt1", new Rule_Bolt("RuleBolt1"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
-			 builder.setBolt("RuleBolt2", new Rule_Bolt("RuleBolt2"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
-			 builder.setBolt("RuleBolt3", new Rule_Bolt("RuleBolt3"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
-			 builder.setBolt("ResultBolt", new Result_Bolt(),1).allGrouping("RuleBolt1").allGrouping("RuleBolt2").allGrouping("RuleBolt3");
-			
+//			 builder.setBolt("RuleBolt2", new Rule_Bolt("RuleBolt2"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
+//			 builder.setBolt("RuleBolt3", new Rule_Bolt("RuleBolt3"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
+//			 builder.setBolt("PayloadBolt1", new Payload_Bolt(),1).allGrouping("RuleSpout","rule").allGrouping("RuleBolt1","payload");
+//			 builder.setBolt("PayloadBolt2", new Payload_Bolt(),1).allGrouping("RuleSpout","rule").allGrouping("RuleBolt2","payload");
+//			 builder.setBolt("PayloadBolt3", new Payload_Bolt(),1).allGrouping("RuleSpout","rule").allGrouping("RuleBolt3","payload");			 
+//			 builder.setBolt("ResultBolt", new Result_Bolt(),1).allGrouping("RuleBolt1","result").allGrouping("RuleBolt2","result").allGrouping("RuleBolt3","result").allGrouping("PayloadBolt1").allGrouping("PayloadBolt2").allGrouping("PayloadBolt3");
+//			
 			 
 			 //builder.setSpout("PcapSpout4jnetpcap1", new PcapSpout4jnetpcap(null,-1,null,null,null,-1,"topic2"), 1);
 			 //builder.setSpout("PcapSpout4jnetpcap2", new PcapSpout4jnetpcap2(null,-1,null,null,null,-1,"topic5"), 1);
@@ -110,7 +113,7 @@ public class PcapTopo4jnetpcap {
 //		    conf.put("assigned_flag", "1");
 //		    //具体的组件节点对信息
 //		    conf.put("design_map", component2Node);
-			 conf.setNumWorkers(6);
+			 conf.setNumWorkers(9);
         	 try{
         		 StormSubmitter.submitTopology(args[0], conf, builder.createTopology());
         	 }catch (InvalidTopologyException e ){
