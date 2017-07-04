@@ -4,6 +4,16 @@ public class haha {
 	// for test address match
 	public static void main(String[] args){
 		
+		System.out.println(convertAddrStri2Int("10.0.0.0"));
+		System.out.println(convertAddrStri2Int("10.255.255.255"));
+		System.out.println(convertAddrStri2Int("192.168.0.0"));
+		System.out.println(convertAddrStri2Int("192.168.255.255"));
+		System.out.println(convertAddrStri2Int("172.16.0.0"));
+		System.out.println(convertAddrStri2Int("172.31.255.255"));
+		int mask = 0xFFFFFFFF << 1;
+		System.out.println(convertAddrStri2Int("172.16.0.1") == -1408237567);
+		System.out.println(convertAddrStri2Int("10.10.10.11")&mask);
+		
 		int a = 0;
 		changePara(a);
 		System.out.println(a);
@@ -52,6 +62,14 @@ public class haha {
 		a = 9;
 	}
 		
+	public static int convertAddrStri2Int(String addr)	{
+		String[] networkips = addr.split("\\.");
+		int ipAddr = (Integer.parseInt(networkips[0]) << 24)
+	            | (Integer.parseInt(networkips[1]) << 16)
+	            | (Integer.parseInt(networkips[2]) << 8)
+	            | Integer.parseInt(networkips[3]);
+		return ipAddr;
+	}
 	public static boolean protocolMatch(String pk_protocol, String rule_protocol) {
 		if(rule_protocol.equals(pk_protocol)==false){//proto:ip(tcp(http)/udp/icmp/igmp)/arp/
 			if(rule_protocol.equals("ip") ) {

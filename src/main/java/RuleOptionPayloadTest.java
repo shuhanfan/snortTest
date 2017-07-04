@@ -42,10 +42,10 @@ public class RuleOptionPayloadTest {
 		ph.dsize = 5;
 		ph.seq = 5;
 		ph.window = 5;
-		ph.flags = 0B10000000;
+		ph.flags = 0x80;
 		
 		
-		DealOption dp = new DealOption(ph);
+		
 		//构造ruleOption
 		RuleOption ro = new RuleOption();
 		Map<String,String> m0 = new HashMap<String,String>();
@@ -99,7 +99,9 @@ public class RuleOptionPayloadTest {
 		m1.put(" distance", "14");
 		ro.conMap.add(m1);
 		//如果还要测headMap，就在ph和ro.headMap上赋值即可。
+		DealOption dp = new DealOption(ph);
 		dp.Detect(ro, payload);
+		
 	}
 	
 

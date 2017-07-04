@@ -57,7 +57,8 @@ public class VolumeSpoutTest {
 		 
 		 if(pcap.nextEx(packet)==1)
 			{
-				CreateValue cv = new CreateValue(packet);
+				CreateValue cv = new CreateValue();
+				cv.anal(packet);
 				fw.write("protocol:"+cv.protocol+",sip:"+cv.sip+",sport:"+cv.sport+",dip:"+cv.dip+",dport:"+cv.dport+",dsize:"+cv.dsize+",ip_proto:"+cv.ip_proto+",DF:"+cv.DF+",MF:"+cv.MF+",Reserved:"+cv.Reserved+",cv.fragoffset:"+cv.fragoffset+",cv.ttl:"+cv.ttl+",cv.tos:"+cv.tos+",cv.id:"+cv.id+",cv.flags"+cv.flags+",cv.seq:"+cv.seq+",cv.ack:"+cv.ack+",cv.window:"+cv.window+",cv.sameip:"+cv.sameip+"\n");
 			}
 				

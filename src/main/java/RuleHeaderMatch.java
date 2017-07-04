@@ -7,7 +7,7 @@ public class RuleHeaderMatch {
 		rh.protocol = "tcp";
 		rh.sip = "![10.1.1.1,10.1.0.4/24]";
 		rh.dip = "[10.1.1.1]";
-		rh.sport = "!:10";
+		rh.sport = "[12:13]";
 		rh.dport = "10:";
 		rh.direction="<>";
 		
@@ -15,7 +15,7 @@ public class RuleHeaderMatch {
 		ph.protocol = "tcp";
 		ph.sip = "10.1.1.2";
 		ph.dip = "10.1.1.1";
-		ph.sport = 11;
+		ph.sport = 18;
 		ph.dport = 11;
 		
 		System.out.println(rh.match(ph)+"");

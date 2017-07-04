@@ -18,7 +18,7 @@ import snort.test.Helpers.Rule_Header;
 public class test {
 	//for test rule filter
 	public static void main(String args[]) {
-		int h = 0B10001000;
+		int h = 0x88;
 		System.out.println(h);
 	
 //		try {

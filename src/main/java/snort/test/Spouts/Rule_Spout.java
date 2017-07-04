@@ -48,9 +48,10 @@ public class Rule_Spout implements IRichSpout {
 	public void open(Map arg0, TopologyContext arg1, SpoutOutputCollector spoutOutputCollector) {
 		// TODO Auto-generated method stub
 		this.outputCollector = spoutOutputCollector;		
+		
         try {  	
         	if(ruleFile.equals("")){
-        		fis = new FileInputStream("//opt//res4Snort//special_rules");
+        		fis = new FileInputStream("/opt/res4Snort/selected_100_rules");
         	}
         	else
         		fis = new FileInputStream(ruleFile);

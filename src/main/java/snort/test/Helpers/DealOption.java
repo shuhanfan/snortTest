@@ -21,39 +21,46 @@ within= 5表示在前一个匹配结尾处的之后5个byte之间匹配
  * */
  
 public class DealOption {
-	Rule_Header rh;
-	byte[] payload;//包含整个包信息
+	//Rule_Header rh;
+	
+	//byte[] payload;
 	public Packet_Header ph;
-	ArrayList<RuleOption > rules;//解析后的规则选项列表
-	int detect = 0;
-	//FileWriter fw;
-	FileWriter fw1;
-	public DealOption(){
-		ph = new Packet_Header();
-		rules = new ArrayList<RuleOption>();
-		rh = new Rule_Header();
+	public ArrayList<RuleOption > parsed_rules;//解析后的规则选项列表
+	//int detect = 0;
+	String msg = "";
+	//public static FileWriter fw;
+	//public FileWriter fw1;
+	public DealOption(){		
 	}
-	public DealOption(Packet_Header n_ph){
-		ph = n_ph;
-		rules = new ArrayList<RuleOption>();
-		rh = new Rule_Header();
+	public DealOption(Packet_Header this_ph) {
+		ph = this_ph;
 		
 	}
-	public DealOption(Rule_Header n_rh, Packet_Header n_ph, int ndetect){
-		detect = ndetect;	
-		rh = n_rh;
-		ph = n_ph;
-		payload = n_ph.payload;
-		//ruleBoltType = n_ruleBoltType;
-		try {
-			//fw = new FileWriter("//opt//res4Snort//optionMatch", true);
-			fw1 = new FileWriter("//opt//res4Snort//detectResult", true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
+	public DealOption(Packet_Header this_ph, ArrayList<RuleOption> this_parsed_rules){
+		ph = this_ph;
+		parsed_rules = this_parsed_rules;
+//		try {
+//		fw1 = new FileWriter("//opt//res4Snort//detectResult", true);
+//	} catch (IOException e) {
+//		// TODO Auto-generated catch block
+//		e.printStackTrace();
+//	}		
+}
+//	public DealOption(Rule_Header n_rh, Packet_Header n_ph, int ndetect){
+//		detect = ndetect;	
+//		rh = n_rh;
+//		ph = n_ph;
+//		payload = n_ph.payload;
+//		//ruleBoltType = n_ruleBoltType;
+//		try {
+//			//fw = new FileWriter("//opt//res4Snort//optionMatch", true);
+//			fw1 = new FileWriter("//opt//res4Snort//detectResult", true);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//	}
 
 	 
 //	 public static boolean isModifier(String key) {
@@ -151,12 +158,12 @@ public class DealOption {
 				
 			}
 
-		}
+		} 
 		
 		res.put(nk, v);
 		//System.out.println("the "+nk+" content match offset is:");
 //		for(int o=0; o<v.size(); o++){
-//			System.out.println(v.get(o)+",");
+//			//System.out.println(v.get(o)+",");
 //		}
 		if(!negative) {
 			if(amount==0) return false;
@@ -188,6 +195,8 @@ public class DealOption {
 		 boolean negative = false;
 		 boolean isString = false;
 		 //System.out.println("the value in KMP is:"+value);
+		 if("".equals(value) || value == null)
+			 return 0;
 		 if(value.charAt(1)=='!') {
 			 negative = true;
 			 value = value.substring(2,value.length()-1);
@@ -209,7 +218,7 @@ public class DealOption {
 		
 		 String orib = BytetoHexString(payload,payload.length);//orib的长度是oris的两倍
 		 //System.out.println("the orib is:"+orib);
-		// System.out.println("the oris is:"+oris);
+		// //System.out.println("the oris is:"+oris);
 		 //如果含有byte模式串，进行kmp算法匹配，否则是正常匹配
 		 
 		 if(pat.length==1){//只有字符串匹配
@@ -238,6 +247,7 @@ public class DealOption {
 		 }
 		else{
 			//System.out.println("pat3");
+			//fw.write("in pat3\n");
 			pat[1] = pat[1].replace(" ", "");
 			
 			if(IndexKMP(orib,pat[1],nk,res,isString,ignoreCase,negative)){
@@ -259,6 +269,8 @@ public class DealOption {
 						 if(re.get(i)-pat[0].length()*2>=0){
 							 //System.out.println("re.get(i)-pat[0].length()*2>=0");
 							 String tmp = oris.substring(re.get(i)/2-pat[0].length(),re.get(i)/2);
+							 //System.out.println("the tmp is:"+tmp);
+							 //System.out.println("the pat[0] is:"+pat[0]);
 							 if(tmp.equals(pat[0])){
 								 //System.out.println("tmp.equals(pat[0])");
 								 //System.out.println("re.get(i) is:"+re.get(i));
@@ -343,6 +355,9 @@ public class DealOption {
 									 
 								 break;
 							 }
+//							 System.out.println("the oris:"+oris);
+//							 System.out.println("the newstart:"+newstart);
+//							 System.out.println("the p is:"+p);
 							 String tmp = oris.substring(newstart/2, newstart/2+p.length());
 							 if(ignoreCase) {
 								 tmp = tmp.toLowerCase();
@@ -386,7 +401,7 @@ public class DealOption {
 				 if(re.size()==0) return 0;
 				 //System.out.println("the re size is:"+re.size());
 //				 for(int i=0; i<re.size(); i++){
-//						System.out.println("the re is"+re.get(i));
+//						//System.out.println("the re is"+re.get(i));
 //					}
 				return pattern_len;
 				 
@@ -402,8 +417,6 @@ public class DealOption {
 	} catch (UnsupportedEncodingException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
-	}catch(IOException e){
-		e.printStackTrace();
 	}
 	return 1;
 	 }
@@ -416,45 +429,45 @@ public class DealOption {
 	 
 	 
 	 public void Detect(RuleOption ro, byte[] payload){
-		 //try{
-			 //fw.write("the rule option is:");
+	//	 try{
+			 ////fw.write("the rule option is:");
 			 //System.out.println("the rule option is:");
 //			 for (String key : ro.headMap.keySet()) {
-//				   fw.write(key + ":" + ro.headMap.get(key) + ";");
-//				   System.out.println(key + ":" + ro.headMap.get(key) + ";");
+//				   //fw.write(key + ":" + ro.headMap.get(key) + ";");
+//				   //System.out.println(key + ":" + ro.headMap.get(key) + ";");
 //			}
-			 //fw.write("\n");
+			 ////fw.write("\n");
 			 for ( int n = 0 ; n <ro.conMap.size(); n++){
 				 //System.out.println("the n is:"+n);
 				 Map<String, String> map = ro.conMap.get(n);
 //				 for (String key : map.keySet()) {
-//					   //fw.write(key + ":" + map.get(key) + ";");
-//					   System.out.println(key + ":" + map.get(key) + ";");
+//					   ////fw.write(key + ":" + map.get(key) + ";");
+//					   //System.out.println(key + ":" + map.get(key) + ";");
 //				}
-				 //fw.write("\n");
+				 ////fw.write("\n");
 				 
 			 }
 			for(Iterator it = ro.headMap.keySet().iterator(); it.hasNext();) {
 				 String  key=it.next().toString();    
 			     String value=ro.headMap.get(key);
-			    // //fw.write(key+":"+value+"\n");	//用keyvalue与content无关来处理packet
+			    // ////fw.write(key+":"+value+"\n");	//用keyvalue与content无关来处理packet
 			     if(key.equals(" fragoffset")){
-			    	 //fw.write("in fragoffset:\n");
+			    	 ////fw.write("in fragoffset:\n");
 			    	 //System.out.println("in fragoffset:");
 			    	 if(value.contains("!")) {
 			    		 if(ph.fragoffset == Integer.parseInt(value.substring(1))){
-			    			 //fw.write("! and equal\n");
+			    			 ////fw.write("! and equal\n");
 			    			 //fw.flush();
 			    			 //System.out.println("! and equal");
 			    			 
-			    			 return;
+			    			 return ;
 
 			    		 }
 			    			 
 			    	 }
 			    	 else if(value.contains(">")) {
 			    		 if (ph.fragoffset <= Integer.parseInt(value.substring(1)) ){
-			    			 //fw.write("ph <= rh\n");
+			    			 ////fw.write("ph <= rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph <= rh\n");
 			    			 return;
@@ -463,7 +476,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains("<")) {
 			    		 if(ph.fragoffset >= Integer.parseInt(value.substring(1))){
-			    			 //fw.write("ph > rh\n");
+			    			 ////fw.write("ph > rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph > rh");
 			    			 return;
@@ -471,7 +484,7 @@ public class DealOption {
 			    			 
 			    	 }
 			    	 else if (ph.fragoffset != Integer.parseInt(value)){
-			    		 //fw.write("ph != rh\n");
+			    		 ////fw.write("ph != rh\n");
 			    		 //fw.flush();
 			    		 //System.out.println("ph != rh");
 			    		 return;
@@ -479,11 +492,11 @@ public class DealOption {
 			    		 
 			     }
 			     else if (key.equals(" ttl")) {
-			    	 //fw.write("in ttl \n");
+			    	 ////fw.write("in ttl \n");
 			    	 //System.out.println("in ttl");
 			    	 if(value.contains("<=")) {
 			    		 if(ph.ttl > Integer.parseInt(value.substring(2))){
-			    			 //fw.write("ph > rh\n");
+			    			 ////fw.write("ph > rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph > rh");
 			    			 return;
@@ -492,7 +505,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains(">=")) {
 			    		 if(ph.ttl < Integer.parseInt(value.substring(2))){
-			    			 //fw.write("ph < rh\n");
+			    			 ////fw.write("ph < rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph < rh");
 			    			 return;
@@ -501,7 +514,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains("<")) {
 			    		 if(ph.ttl >= Integer.parseInt(value.substring(1))){
-			    			 //fw.write("ph >= rh\n");
+			    			 ////fw.write("ph >= rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph >= rh");
 			    			 return;
@@ -510,7 +523,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains(">")) {
 			    		 if(ph.ttl <= Integer.parseInt(value.substring(1))){
-			    			 //fw.write("ph <= rh\n");
+			    			 ////fw.write("ph <= rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph <= rh");
 			    			 return;
@@ -519,7 +532,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains("=")) {
 			    		 if(ph.ttl != Integer.parseInt(value.substring(1))){
-			    			 //fw.write("ph != rh\n");
+			    			 ////fw.write("ph != rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph != rh");
 			    			 return;
@@ -530,7 +543,7 @@ public class DealOption {
 			    		 String[] vals = value.split("-");
 		    			 if(vals.length == 1) {// 5-
 		    				 if(ph.ttl < Integer.parseInt(value.substring(0, 1))){
-		    					 //fw.write("5- and ph < rh\n");
+		    					 ////fw.write("5- and ph < rh\n");
 		    					 //fw.flush();
 		    					 //System.out.println("5- and ph < rh");
 		    					 return;
@@ -540,7 +553,7 @@ public class DealOption {
 		    			 else {//lenth = 2
 		    				 if("".equals(vals[0])) {//-5
 		    					 if(ph.ttl > Integer.parseInt(vals[1])){
-		    						 //fw.write("-5 and ph > rh\n");
+		    						 ////fw.write("-5 and ph > rh\n");
 		    						 //fw.flush();
 		    						 //System.out.println("-5 and ph > rh");
 		    						 return;
@@ -549,7 +562,7 @@ public class DealOption {
 		    				 }
 		    				 else {//3-5
 		    					 if(ph.ttl < Integer.parseInt(vals[0]) || ph.ttl > Integer.parseInt(vals[1])){
-		    						 //fw.write("3-5 and ph not in the range\n");
+		    						 ////fw.write("3-5 and ph not in the range\n");
 		    						 //fw.flush();
 		    						 //System.out.println("3-5 and ph not in the range");
 		    						 return;
@@ -560,7 +573,7 @@ public class DealOption {
 			    	 }
 			    	 else {//5
 			    		 if(ph.ttl != Integer.parseInt(value)){
-			    			 //fw.write("ph != rh\n");
+			    			 ////fw.write("ph != rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("ph != rh");
 			    			 return;
@@ -569,18 +582,18 @@ public class DealOption {
 			    	 }
 			     }
 			     else if(key.equals(" tos")) {
-			    	 //fw.write("in tos:\n");
+			    	 ////fw.write("in tos:\n");
 			    	 //System.out.println("in tos");
 			    	 if(value.contains("!")) {
 			    		 if(ph.tos == Integer.parseInt(value.substring(1))){
-			    			 //fw.write("! and ph == rh\n");
+			    			 ////fw.write("! and ph == rh\n");
 			    			 //fw.flush();
 			    			 //System.out.println("! and ph == rh");
 			    			 return;
 			    		 }	    		 
 			    	 }
 			    	 else if(!value.equals(ph.tos+"")){
-			    		 //fw.write("ph != rh\n");
+			    		 ////fw.write("ph != rh\n");
 			    		 //fw.flush();
 			    		 //System.out.println("ph != rh");
 			    		 return;
@@ -590,7 +603,7 @@ public class DealOption {
 			     else if(key.equals(" id")) {
 			    	 //System.out.println("in id:");
 			    	 if(!value.equals(ph.id+"")){
-			    		 //fw.write("in id:\n ph != rh\n");
+			    		 ////fw.write("in id:\n ph != rh\n");
 			    		 //fw.flush();
 			    		 //System.out.println("ph != rh");
 			    		 return;
@@ -599,27 +612,27 @@ public class DealOption {
 			     }
 			     
 			     else if(key.equals(" fragbits")){//format is <MDR+>
-			    	 //fw.write("in fragbits:\n");
+			    	 ////fw.write("in fragbits:\n");
 			    	 //System.out.println("in fragbits:");
 			    	 if(value.contains("!")){
-			    		 //fw.write("contains !:");
+			    		 ////fw.write("contains !:");
 			    		 //System.out.println("contains !:");
 			    		 if(value.contains("M")&&ph.MF==1){
-			    			 //fw.write("MF\n");
+			    			 ////fw.write("MF\n");
 			    			 //fw.flush();
 			    			 //System.out.println("MF");
 			    			 return;
 			    		 }
 			    			 
 			    		 if(value.contains("R")&&ph.Reserved==1){
-			    			 //fw.write("Reserved\n");
+			    			 ////fw.write("Reserved\n");
 			    			 //fw.flush();
 			    			 //System.out.println("Reserved");
 			    			 return;
 			    		 }
 			    			 
 			    		 if(value.contains("D")&&ph.DF==1){
-			    			 //fw.write("DF\n");
+			    			 ////fw.write("DF\n");
 			    			 //fw.flush();
 			    			 //System.out.println("DF");
 			    			 return;
@@ -628,7 +641,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains("*")){
 			    		 if(!(value.contains("M")&&ph.MF==1||value.contains("D")&&ph.DF==1||value.contains("R")&&ph.Reserved==1)){
-			    			 //fw.write("contain *\n");
+			    			 ////fw.write("contain *\n");
 			    			 //fw.flush();
 			    			 //System.out.println("contain *");
 			    			 return;
@@ -637,7 +650,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains("+")){
 			    		 if((value.contains("M")&&ph.MF!=1||value.contains("D")&&ph. DF!=1||value.contains("R")&&ph. Reserved!=1)) {
-			    			 //fw.write("contains +\n");
+			    			 ////fw.write("contains +\n");
 			    			 //fw.flush();
 			    			 //System.out.println("contains +");
 			    			 return;
@@ -648,7 +661,7 @@ public class DealOption {
 			     else if (key.equals(" ip_proto")){
 			    	 String pro = Integer.toString(ph.ip_proto);
 			    	 if(!value.equals(pro)){
-			    		 //fw.write("ip_proto not equal\n");
+			    		 ////fw.write("ip_proto not equal\n");
 			    		 //fw.flush();
 			    		 //System.out.println("ip_proto not equal");
 			    		 return;
@@ -662,7 +675,7 @@ public class DealOption {
 			    	 int dsize = ph.dsize;
 			    	 String size = Integer.toString(dsize);
 			    	 if(!value.equals(size)){
-			    		 //fw.write("dsize not equal\n");
+			    		 ////fw.write("dsize not equal\n");
 			    		 //fw.flush();
 			    		 if(value.contains("<>")) {
 			    			 String[] d = value.split("<>");
@@ -696,7 +709,7 @@ public class DealOption {
 			    	 
 			     }
 			     else if(key.equals(" flags")){//CEUAPRSF,可以用12表示CE
-			    	 //fw.write("in flags: \n");
+			    	 ////fw.write("in flags: \n");
 			    	 //System.out.println("in flags:");
 			    	 if(value.contains(",")) {
 			    		 value = value.split(",")[0];
@@ -724,58 +737,58 @@ public class DealOption {
 			    	 //System.out.println(F+","+S+","+R+","+P+","+A+","+U+","+E+","+C);
 			    	
 			    	 if(value.contains("!")){
-			    		 //fw.write("contains !\n");
+			    		 ////fw.write("contains !\n");
 			    		 if(value.contains("F")&&F) {
-			    			 //fw.write("F\n");
+			    			 ////fw.write("F\n");
 			    			 //fw.flush();
 			    			 //System.out.println("F");
 			    			 return;
 			    		 }
 			    			 
 			    		 if(value.contains("S")&&S) {
-			    			 //fw.write("S\n");
+			    			 ////fw.write("S\n");
 			    			 //fw.flush();
 			    			 //System.out.println("S");
 			    			 return;
 			    		 }
 			    			
 			    		 if(value.contains("R")&&R) {
-			    			 //fw.write("R\n");
+			    			 ////fw.write("R\n");
 			    			 //fw.flush();
 			    			 //System.out.println("R");
 			    			 return;
 			    		 }
 			    			 
 			    		 if(value.contains("P")&&P) {
-			    			 //fw.write("P\n");
+			    			 ////fw.write("P\n");
 			    			 //fw.flush();
 			    			 //System.out.println("P");
 			    			 return;
 			    		 }
 			    			 
 			    		 if(value.contains("A")&&A) {
-			    			 //fw.write("A\n");
+			    			 ////fw.write("A\n");
 			    			 //fw.flush();
 			    			 //System.out.println("A");
 			    			 return;
 			    		 }
 			    			
 			    		 if(value.contains("U")&&U) {
-			    			 //fw.write("U\n");
+			    			 ////fw.write("U\n");
 			    			 //fw.flush();
 			    			 //System.out.println("U");
 			    			 return;
 			    		 }
 			    			 
 			    		 if((value.contains("E") || value.contains("2"))&&E) {
-			    			 //fw.write("E\n");
+			    			 ////fw.write("E\n");
 			    			 //fw.flush();
 			    			 //System.out.println("E");
 			    			 return;
 			    		 }
 			    			
 			    		 if((value.contains("C")|| value.contains("1"))&&C) {
-			    			 //fw.write("C\n");
+			    			 ////fw.write("C\n");
 			    			 //fw.flush();
 			    			 //System.out.println("C");
 			    			 return;
@@ -784,7 +797,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains("*")) {
 			    		 if(!(value.contains("F")&&F || value.contains("S")&&S || value.contains("R")&&R || value.contains("P")&&P || value.contains("A")&&A || value.contains("U")&&U || (value.contains("E")||value.contains("2"))&&E || (value.contains("C") || value.contains("1"))&&C )) {
-			    			 //fw.write("contains *\n");
+			    			 ////fw.write("contains *\n");
 			    			 //fw.flush();
 			    			 //System.out.println("contains *");
 			    			 return;
@@ -793,7 +806,7 @@ public class DealOption {
 			    	 }
 			    	 else if(value.contains("+")) {
 			    		 if((value.contains("F")&&!F || value.contains("S")&&!S || value.contains("R")&&!R || value.contains("P")&&!P || value.contains("A")&&!A || value.contains("U")&&!U || (value.contains("E")||value.contains("2"))&&!E || (value.contains("C") || value.contains("1"))&&!C )) {
-			    			 //fw.write("contains +\n");
+			    			 ////fw.write("contains +\n");
 			    			 //fw.flush();
 			    			 //System.out.println("contains +");
 			    			 return;
@@ -805,7 +818,7 @@ public class DealOption {
 			     }
 			     else if(key.equals(" seq")) {
 			    	 if(!value.equals(ph.seq+"")) {
-			    		 //fw.write("seq not equal\n");
+			    		 ////fw.write("seq not equal\n");
 			    		 //fw.flush();
 			    		 //System.out.println("seq not equal");
 			    		 return;
@@ -814,7 +827,7 @@ public class DealOption {
 			     }
 			     else if(key.equals(" ack")){
 			    	 if(!value.equals(ph.ack+"")) {
-			    		 //fw.write("ack not equal\n");
+			    		 ////fw.write("ack not equal\n");
 			    		 //fw.flush();
 			    		 //System.out.println("ack not equal");
 			    		 return;
@@ -825,14 +838,14 @@ public class DealOption {
 			     else if(key.equals(" window")){
 			    	 if(value.contains("!")) {
 			    		 if(ph.window == Integer.parseInt(value.substring(1))){
-			    			 //fw.write(" !window and equal\n");
+			    			 ////fw.write(" !window and equal\n");
 			    			 //fw.flush();
 			    			 //System.out.println("!window and equal");
 			    			 return;
 			    		 }	    		 
 			    	 }
 			    	 else if(!value.equals(ph.window+"")){
-			    		 //fw.write("window not equal\n");
+			    		 ////fw.write("window not equal\n");
 			    		 //fw.flush();
 			    		 //System.out.println("window not equal");
 			    		 return;
@@ -841,7 +854,7 @@ public class DealOption {
 			     }
 			     else if(key.equals(" sameip")) {
 			    	 if(!ph.sameip) {
-			    		 //fw.write("not sameip\n");
+			    		 ////fw.write("not sameip\n");
 			    		 //fw.flush();
 			    		 //System.out.println("not sameip");
 			    		 return;
@@ -866,12 +879,12 @@ public class DealOption {
 					ignoreCase = true;
 				}
 				String value=tmp.get(" content");
-				//fw.write("the content is:"+value+"\n");
+				////fw.write("the content is:"+value+"\n");
 				//System.out.println("");
 				pattern_len = KMP(value,payload,k,res,ignoreCase);
 				if(pattern_len == 0) {
 					//res存储的是第k个content的匹配所有匹配位置，k表示匹配的是第k个content
-					//fw.write("!KMP(value,payload,k,res,ignoreCase)\n");
+					////fw.write("!KMP(value,payload,k,res,ignoreCase)\n");
 					//fw.flush();
 					//System.out.println("!KMP(value,payload,k,res,ignoreCase)");
 					 return;
@@ -937,7 +950,7 @@ public class DealOption {
 							if(!isOk){
 								mat.remove(h);
 								if(mat.size()==0) {
-									//fw.write("distance not match and matsize =0\n");
+									////fw.write("distance not match and matsize =0\n");
 									//fw.flush();
 									//System.out.println("distance not match and matsize =0");
 									return;
@@ -969,7 +982,7 @@ public class DealOption {
 							if(!isOk){
 								mat.remove(h);
 								if(mat.size()==0) {
-									//fw.write("within not match and matsize =0\n");
+									////fw.write("within not match and matsize =0\n");
 									//fw.flush();
 									//System.out.println("within not match and matsize =0");
 									return;
@@ -993,7 +1006,7 @@ public class DealOption {
 									if(payload.length < pos+pattern.length()+far) {
 										mat.remove(h);
 										if(mat.size()==0) {
-											//fw.write("isdataat relative not match and matsize =0\n");
+											////fw.write("isdataat relative not match and matsize =0\n");
 											//fw.flush();
 											//System.out.println("isdataat relative not match and matsize =0");
 											return;
@@ -1007,7 +1020,7 @@ public class DealOption {
 									if(payload.length < far) {
 										mat.remove(h);
 										if(mat.size()==0) {
-											//fw.write("isdataat absolute not match and matsize =0\n");
+											////fw.write("isdataat absolute not match and matsize =0\n");
 											//fw.flush();
 											//System.out.println("isdataat absolute not match and matsize =0");
 											return;
@@ -1025,7 +1038,7 @@ public class DealOption {
 									if(payload.length >= pos+pattern.length()+far) {
 										mat.remove(h);
 										if(mat.size()==0) {
-											//fw.write("isdataat !2,relatvie not match and matsize =0\n");
+											////fw.write("isdataat !2,relatvie not match and matsize =0\n");
 											//fw.flush();
 											//System.out.println("isdataat !2,relatvie not match and matsize =0");
 											return;
@@ -1039,7 +1052,7 @@ public class DealOption {
 									if(payload.length > far) {
 										mat.remove(h);
 										if(mat.size()==0) {
-											//fw.write("isdataat !2 absolute not match and matsize =0\n");
+											////fw.write("isdataat !2 absolute not match and matsize =0\n");
 											//fw.flush();
 											//System.out.println("isdataat !2 absolute not match and matsize =0");
 											return;
@@ -1066,15 +1079,15 @@ public class DealOption {
 						
 					}
 					else {
-						//fw.write("offset and depth not match\n");
+						////fw.write("offset and depth not match\n");
 						//fw.flush();
 						//System.out.println("offset and depth not match");
 						return ;
 					}
 					
 					
-					////fw.write("intrusion detect!!");
-				   //fw.write("detect instruction!\n");
+					//////fw.write("intrusion detect!!");
+				   ////fw.write("detect instruction!\n");
 				   //System.out.println("a content modifier satisfied!");
 				   break;
 				}
@@ -1082,7 +1095,7 @@ public class DealOption {
 				
 				
 			}
-			detect++;
+			msg = ro.headMap.get(" msg");
 			//System.out.println("detect instruction!");
 //		   fw1.write("detect instruction!\n");
 //	       fw1.write("the rule is:"+ro.headMap.get("msg")+" "+rh.sip+" "+rh.sport+" "+rh.dip+" "+rh.dport+" "+rh.protocol+"\n");
@@ -1101,20 +1114,22 @@ public class DealOption {
 		
 	 }
 	
-	public int run(){
+	public String run(){
 //		try {
-//			//fw.write("in dealOption\n");
+//			////fw.write("in dealOption\n");
 //			//fw.flush();
 //		} catch (IOException e) {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-		rules = rh.parsed_rule_option;
-		for(int i=0; i<rules.size(); i++){//遍历规则选项链表，检测数据包
-			RuleOption ro =rules.get(i);
-			Detect(ro, payload);			
+		for(int i=0; i<parsed_rules.size(); i++){//遍历规则选项链表，检测数据包
+			RuleOption ro =parsed_rules.get(i);
+			Detect(ro, ph.payload);	
+			if(!"".equals(msg))
+				return msg;
 		}
-		return detect;
+		//System.out.println("the detect num is:"+detect);
+		return msg;
 		/*
 		//打印一下规则
 		
@@ -1122,7 +1137,7 @@ public class DealOption {
 			for(int i=0; i<rules.size(); i++){//遍历规则选项链表，检测数据包
 				RuleOption ro =rules.get(i);
 				Detect(ro, payload);
-				System.out.println("after detect");
+				//System.out.println("after detect");
 				
 			}*/
 			

@@ -12,8 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 import snort.test.Helpers.CreateValue;
+import snort.test.Helpers.CreateValueTest;
 import snort.test.Helpers.Packet_Header;
 import snort.test.Helpers.KafkaProperties;
+import snort.test.Helpers.Pcap_Reader;
 
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapHeader;
@@ -62,7 +64,7 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 	
 	//start capture
 	private String deviceName = null;
-	private int count = -1;
+	
 	private String filter = null;
 	private String srcFilename =null ;
 	private String dstFilename = null;
@@ -71,7 +73,13 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 	private int flags = Pcap.MODE_PROMISCUOUS; // capture all packets
 	private int timeout = 10 ; // 10 seconds in millis
 	private long pktlen = 0;//record the transport flow
-	private long startTime = 0;
+	private int count = 0;
+	
+	private long lastTime = -1;
+	private long curTime = -1;
+	private long duringTime = 0;
+	private int packnum = 0;
+	private CreateValue cv;
 	
 	//public FileWriter fw;
 	
@@ -178,9 +186,9 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 			//System.out.println(i+"device is "+device.getName()+" and "+device.getName().equals("eth0"));
 			String description =(device.getDescription() != null) ? device.getDescription(): "No description available";
 			if(device.getName().equals("eth0")||device.getName().equals("em1"))//245或者200的内网卡
-				chooseid=i;
-			i++;
+				chooseid=i;		
 			System.out.printf("#%d: %s [%s]\n", i, device.getName(), description);
+			i++;
 		}
 		//System.out.println("bbbbbbbbbbbbbbbbbbthe final device num is:"+chooseid);
 		/*try {
@@ -189,7 +197,7 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}*/
-		
+		System.out.println("the choose is:"+chooseid);
 		return alldevs.get(chooseid);
     }
 	
@@ -197,6 +205,7 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 		// TODO Auto-generated method stub
 		this.outputCollector = spoutOutputCollector;		
         try { 
+        	cv = new CreateValue();
         //从kafka队列获取专用：流量（根据topic以及consumer config的内容）
 //        	this.consumer = kafka.consumer.Consumer.createJavaConsumerConnector(
 //                    createConsumerConfig());
@@ -214,8 +223,8 @@ public class Volume_Spout implements Serializable,IRichSpout  {
         	if(srcFilename!=null){
         		//System.out.println("come to the srcFile is not null");
         	//	fw.write("open offline srcFile\n");
-        		pcap=Pcap.openOffline(srcFilename, errbuf);
-        		pcap=Pcap.openOffline("//opt//res4Snort//inside.pcap", errbuf);
+        		//pcap=Pcap.openOffline(srcFilename, errbuf);
+        		pcap=Pcap.openOffline("/opt/res4Snort/inside.pcap", errbuf);
         		System.out.println("after open~~~~~~~~~~~~~~");
         	
         		
@@ -227,7 +236,6 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 			 //hdr = new PcapHeader(JMemory.POINTER);  
 			 //buf = new JBuffer(JMemory.POINTER);
 			 packet=new PcapPacket(JMemory.POINTER);
-			 startTime = System.currentTimeMillis();
         	}
         	else
         	{
@@ -246,7 +254,6 @@ public class Volume_Spout implements Serializable,IRichSpout  {
         			System.err.printf("Error while opening device for capture: "+ errbuf.toString());
         			return;
         		}
-        	startTime = System.currentTimeMillis();
 			id = JRegistry.mapDLTToId(pcap.datalink());
 			 //hdr = new PcapHeader(JMemory.POINTER);  
 			 //buf = new JBuffer(JMemory.POINTER);
@@ -276,7 +283,50 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 			//device获取用if(pcap.nextEx(packet)==1)
 		    if(pcap.nextEx(packet)==1)
 			{
-				CreateValue cv = new CreateValue(packet);
+		    	
+		    	
+		    	
+		    	
+//		    	count2++;
+//		    	long curtime = System.nanoTime();		    	
+//		    	long during = curtime-lastTime;
+//		    	System.out.println("volumeSpout period:"+during);
+//		    	lastTime = curtime;
+//		    	System.out.println("befor:"+curtime);
+		    	
+		    	
+		    	//对packet的解析
+//		    	byte[] buff = new byte[packet.getTotalSize()];  
+//		        packet.transferStateAndDataTo(buff); 
+//		        Pcap_Reader pr = new Pcap_Reader();
+//		        pr.data_read(buff, buff.length);
+//		        System.out.println("the sip is:"+pr.ipv6.src);
+//		        System.out.println("the dip is:"+pr.ipv6.dst);
+		        
+//				
+		    	cv.anal(packet);
+		    	//测试发送速率
+		    	
+		    	packnum++;
+		    	curTime = System.currentTimeMillis()/1000;
+		    	duringTime = curTime - lastTime;
+		    	
+		    	//System.out.println("duringTime is:"+duringTime);
+		    	if(duringTime >= 1 || lastTime == -1) {
+		    		System.out.println("in volumeSpout(pps):"+packnum+"/"+curTime+"s");
+		    		lastTime = curTime;
+		    		packnum = 0;
+		    	}
+		    	
+//		    	System.out.println("the sip is:"+cv.sip);
+//		        System.out.println("the dip is:"+cv.dip);
+//		    	System.out.println("the proto is:"+cv.protocol);
+//				long curTime = System.nanoTime();
+//				long during2 = curTime - curtime;
+//				System.out.println("createValue period:"+during2);
+		    	
+//				count1++;
+//				System.out.println("count2="+count2+",count1="+count1+", "+(count2-count1));
 //				byte[] tmp = {0x05,0x3a,(byte) 0xf2,0x33,0x55,0x48,0x33,(byte) 0xcc,0x6a,(byte) 0x85,(byte) 0xb1,(byte) 0x85,0x45,(byte) 0xf8,(byte) 0x94,0x34,0x72,0x3c,(byte) 0xea,0x0b,(byte) 0xe4,0x34,0x47,0x40,(byte) 0xc1,(byte) 0xf6};
 //				if(!Arrays.equals(cv.payload, tmp))
 //					return;
@@ -415,14 +465,27 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 		    	//fw.write(cbuf);
 		    	
 		    	//处理之后测试流量发送速率
-	           
-//		    	pktlen = pktlen + pkheader.payload.length;
-//        		long during_time = System.currentTimeMillis()-startTime;
-//        		System.out.println(pktlen+","+ during_time +","+((double)pktlen/during_time));
+	           //efficiency test
+//		    	pktlen = pktlen + cv.total_len;
+//		    	long curTime = System.nanoTime();
+//		    	long period = curTime - curtime;
+//		    	System.out.println("get packet time/ns:"+period);
+//		    	System.out.println("after:"+curTime);
+//		    	System.out.println("get packet rate:mbps"+cv.total_len*8*1000/period);
+//        		long duringTime = curTime-lastTime;
+//        		 if(duringTime/1000>0) {
+//        			 lastTime = curTime;
+//        			 System.out.println(pktlen+","+ duringTime +","+((double)pktlen*8/duringTime));
+//        			 pktlen = 0;
+//
+//        		 }
+        		//System.out.println(pktlen+","+ during_time +","+((double)pktlen*8/during_time));
 //		        this.outputCollector.emit("volume",new Values(pkheader.protocol,pkheader.sip,pkheader.sport,pkheader.dip,pkheader.dport,pkheader.dsize,pkheader.ip_proto,pkheader.DF,pkheader.MF,pkheader.Reserved,pkheader.ack,pkheader.start,pcapbuf));
 //        		
-        		this.outputCollector.emit("volume",new Values(cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.dsize,cv.ip_proto,cv.DF,cv.MF,cv.Reserved,cv.fragoffset,cv.ttl,cv.tos,cv.id,cv.flags,cv.seq,cv.ack,cv.window,cv.sameip,cv.payload,cv.total_len));
-				///***///
+//		    	this.outputCollector.emit("volume", new Values(1));
+       		this.outputCollector.emit("volume",new Values(cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.dsize,cv.ip_proto,cv.DF,cv.MF,cv.Reserved,cv.fragoffset,cv.ttl,cv.tos,cv.id,cv.flags,cv.seq,cv.ack,cv.window,cv.sameip,cv.payload,cv.total_len));
+       	   
+        		//this.outputCollector.emit("volume",new Values(cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol));
         		//System.out.println("protocol:"+cv.protocol+",sip:"+cv.sip+",sport:"+cv.sport+",dip:"+cv.dip+",dport:"+cv.dport+",dsize:"+cv.dsize+",ip_proto:"+cv.ip_proto+",DF:"+cv.DF+",MF:"+cv.MF+",Reserved:"+cv.Reserved+",cv.fragoffset:"+cv.fragoffset+",cv.ttl:"+cv.ttl+",cv.tos:"+cv.tos+",cv.id:"+cv.id+",cv.flags"+cv.flags+",cv.seq:"+cv.seq+",cv.ack:"+cv.ack+",cv.window:"+cv.window+",cv.sameip:"+cv.sameip);
 
 	           
@@ -444,6 +507,7 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 //		outputFieldsDeclarer.declareStream("udp",new Fields("sec","src","dst","len","src_port","dst_port"));
 //		outputFieldsDeclarer.declareStream("tcp",new Fields("sec","src","dst","len","src_port","dst_port"));
 		outputFieldsDeclarer.declareStream("volume",new Fields("protocol","sip","sport","dip","dport","dsize","ip_proto","DF","MF","Reserved","fragoffset","ttl","tos","id","flags","seq","ack","window","sameip","payload","total_len"));
+		//outputFieldsDeclarer.declareStream("volume",new Fields("protocol"));
 		//outputFieldsDeclarer.declareStream("volume",new Fields("protocol","sip","sport","dip","dport"));
 		//outputFieldsDeclarer.declareStream("ip",new Fields("sec","src","dst","len"));
 		//outputFieldsDeclarer.declareStream("http",new Fields());

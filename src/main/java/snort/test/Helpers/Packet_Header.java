@@ -10,8 +10,10 @@ public class Packet_Header {
 	public int version=-1;//4 or 6
 	public String protocol="";
 	public String sip="";
+	public int sip_val = -1;
 	public int sport=-1;
 	public String dip="";
+	public int dip_val = -1;
 	public int dport=-1;
 	
 	public byte[] payload;//抓取到的应用层数据包
