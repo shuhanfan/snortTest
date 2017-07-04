@@ -26,11 +26,6 @@ public class Payload_Bolt implements IBasicBolt{
 
 	private BasicOutputCollector outputCollector;
 	private ArrayList<Rule_Header> rule_set;
-//	public FileWriter fwRule ;
-	//public FileWriter fw ;
-	
-	
-	//private String name_bolt;
 	private int packnum =0;
 	private int detect = 0;
 	  //private int ruleBoltType = 0;
@@ -42,13 +37,16 @@ public class Payload_Bolt implements IBasicBolt{
 	private long duringTime = 0;
 	private boolean transfer = false;
 	
+	private String msg = "";
+	private String name = "";
+	
 	public Payload_Bolt(){
 		
 	}
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		// TODO Auto-generated method stub
-		declarer.declare(new Fields("packnum", "detect", "flow"));
-		//declarer.declare(new Fields("payload"));
+		declarer.declareStream("result2",new Fields("time", "packnum", "detect", "flow"));
+		declarer.declareStream("detail",new Fields("msg","protocol","sip","sport","dip","dport"));
 	}
 
 	public Map<String, Object> getComponentConfiguration() {
@@ -56,152 +54,74 @@ public class Payload_Bolt implements IBasicBolt{
 		return null;
 	}
 
-//	public String BytetoString (byte[] a,int length)
-//	{
-//		String cer="";
-//		for(int i=0;i<length;i++)
-//		{
-//			String hex=Integer.toBinaryString(a[i]&0xFF);
-//			if(hex.length()==1){
-//        		hex ='0'+hex;
-//        	}
-//			
-//				cer=cer+hex;
-//			
-//		}
-//		return cer;
-//	}
 	public void prepare(Map stormConf, TopologyContext context) {
 		packnum = 0;
 		rule_set = new ArrayList<Rule_Header>(500);
 		lastTime = System.currentTimeMillis()/1000;
-		//try {
-//			if(name_bolt.equals("RuleBolt1")){
-//				ruleBoltType = 1;
-//				fwRule = new FileWriter("//opt//res4Snort//rulespout_ruleBolt1");
-//				fw = new FileWriter("//opt//res4Snort//payloadMatch");
-//			}
-//			else if(name_bolt.equals("RuleBolt2")){
-//				ruleBoltType = 2;
-//				fwRule = new FileWriter("//opt//res4Snort//rulespout_ruleBolt2");
-//				fwVol = new FileWriter("//opt//res4Snort//volspout_ruleBolt2");
-//			}	
-//			else if(name_bolt.equals("RuleBolt3")){
-//				ruleBoltType = 3;
-//				fwRule = new FileWriter("//opt//res4Snort//rulespout_ruleBolt3");
-//				fwVol = new FileWriter("//opt//res4Snort//volspout_ruleBolt3");
-//			}
-//		}catch(IOException e){
-//			//System.out.println(e.getMessage());
-//		}
-			
-			
-		
-		// TODO Auto-generated method stub
-		
 	}
 
 	public void execute(Tuple tuple, BasicOutputCollector collector) {
 		// TODO Auto-generated method stub
 		outputCollector = collector;
 		outputCollector.setContext(tuple);  
-		String name=tuple.getSourceStreamId();  
+		name=tuple.getSourceStreamId();  
 		try {
-			////System.out.println("in rule_bolt of execute");			
+			////System.out.println("in rule_bolt of execute");	
+			//改为固定1s向ResultBolt发送包
+			
+			curTime = System.currentTimeMillis()/1000;
+			duringTime = curTime-lastTime;	
 			if(name.equals("payload")){
 				if (!transfer)
-					return;				
-				curTime = System.currentTimeMillis()/1000;
-				duringTime = curTime-lastTime;
-				if(duringTime > 0) {
-        			 lastTime = curTime;
-        			 System.out.println("in ruleBolt:(/kbps) "+pktlen*8/1000.00+",pps:"+packnum);
-        			 pktlen = 0;
-        			 packnum = 0;
+					return;	
+				
+			Packet_Header pcaket_tmp =new Packet_Header();
+			pcaket_tmp.protocol=(String)tuple.getValueByField("protocol");
+			pcaket_tmp.sip=(String)tuple.getValueByField("sip");
+			pcaket_tmp.sport=(Integer)tuple.getValueByField("sport");
+			pcaket_tmp.dip=(String)tuple.getValueByField("dip");
+			pcaket_tmp.dport=(Integer)tuple.getValueByField("dport");
+			
+			pcaket_tmp.payload=(byte[])tuple.getValueByField("payload");
+			pcaket_tmp.ack = (Long)tuple.getValueByField("ack");
+			pcaket_tmp.DF = (Integer)tuple.getValueByField("DF");
+			pcaket_tmp.dsize = (Integer)tuple.getValueByField("dsize");
+			pcaket_tmp.ip_proto = (Integer)tuple.getValueByField("ip_proto");
+			pcaket_tmp.Reserved= (Integer)tuple.getValueByField("Reserved");
+			pcaket_tmp.fragoffset = (Integer)tuple.getValueByField("fragoffset");
+			pcaket_tmp.ttl = (Integer)tuple.getValueByField("ttl");
+			pcaket_tmp.tos = (Integer)tuple.getValueByField("tos");
+			pcaket_tmp.id = (Integer)tuple.getValueByField("id");
+			pcaket_tmp.flags = (Integer)tuple.getValueByField("flags");
+			pcaket_tmp.seq = (Long)tuple.getValueByField("seq");
+			pcaket_tmp.window = (Integer)tuple.getValueByField("window");
+			pcaket_tmp.sameip = (Boolean) tuple.getValueByField("sameip");
+			pktlen += (Integer)tuple.getValueByField("total_len");
 
-        		 }		
-				////System.out.println("rule bolt for vol");
-				Packet_Header pcaket_tmp =new Packet_Header();
-				pcaket_tmp.payload=(byte[])tuple.getValueByField("payload");
-				pcaket_tmp.ack = (Long)tuple.getValueByField("ack");
-				pcaket_tmp.DF = (Integer)tuple.getValueByField("DF");
-				pcaket_tmp.dsize = (Integer)tuple.getValueByField("dsize");
-				pcaket_tmp.ip_proto = (Integer)tuple.getValueByField("ip_proto");
-				pcaket_tmp.Reserved= (Integer)tuple.getValueByField("Reserved");
-				pcaket_tmp.fragoffset = (Integer)tuple.getValueByField("fragoffset");
-				pcaket_tmp.ttl = (Integer)tuple.getValueByField("ttl");
-				pcaket_tmp.tos = (Integer)tuple.getValueByField("tos");
-				pcaket_tmp.id = (Integer)tuple.getValueByField("id");
-				pcaket_tmp.flags = (Integer)tuple.getValueByField("flags");
-				pcaket_tmp.seq = (Long)tuple.getValueByField("seq");
-				pcaket_tmp.window = (Integer)tuple.getValueByField("window");
-				pcaket_tmp.sameip = (Boolean) tuple.getValueByField("sameip");
-				pktlen += (Integer)tuple.getValueByField("total_len");
+			//规则选项处理逻辑接口
+			
+			int rule_number = (Integer)tuple.getValueByField("ruleNumber");
+			Rule_Header rule_header = rule_set.get(rule_number);
+			
+			DealOption dealOption = new DealOption(pcaket_tmp, rule_header.parsed_rule_option);
+			msg =  dealOption.run();
+			if("".equals(msg)) {
+				detect++;
+				//当检测到攻击的时候，emit攻击报文的基本信息
+				this.outputCollector.emit("detail",new Values(msg,pcaket_tmp.protocol,pcaket_tmp.sip,pcaket_tmp.sport,pcaket_tmp.dip,pcaket_tmp.dport));
+			}
+							
+			packnum++;
 				
+        		 
 				
-				
-				
-				String p = BytetoHexString(pcaket_tmp.payload,pcaket_tmp.payload.length);
-				
-//				fw.write("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport+" payload:"+p+"\n");
-				
-				int rule_number = (Integer)tuple.getValueByField("ruleNumber");
-				Rule_Header rule_header = rule_set.get(rule_number);
-//				fw.write("the rule is"+rule_set.get(rule_number).action+" "+rule_set.get(rule_number).action+" "+rule_set.get(rule_number).sip+" "+rule_set.get(rule_number).sport+" "+rule_set.get(rule_number).dip+" "+rule_set.get(rule_number).dport +"\n");
-//				for(int j=0; j<rule_header.rule_option.size(); j++){
-//					fw.write(rule_header.rule_option.get(j)+"\n");
-//				}
-				DealOption dealOption = new DealOption(pcaket_tmp, rule_header.parsed_rule_option);
-				detect += dealOption.run();
-				//System.out.println("the detect received from dealOption is:"+detect);
-				
-				//对数据包进行处
-				////System.out.println(" before deal with packet using rules");
-				packnum++;
-				////System.out.println("name:"+name_bolt+"rule_set_size:"+rule_set.size());
-//				int rule_size = rule_set.size();
-//				for(int i=0; i<rule_size; i++){
-					////System.out.println("in deal packet loop");
-					////System.out.println("the rule is"+rule_set.get(i).action+" "+rule_set.get(i).action+" "+rule_set.get(i).sip+" "+rule_set.get(i).sport+" "+rule_set.get(i).dip+" "+rule_set.get(i).dport);
-					
-//					if(rule_set.get(i).match(pcaket_tmp)){//选择规则选项匹配的规则进行处理
-//						try {
-//							fw.write("the ruleset header match the packet header\n");
-//						
-//						fw.write("before detect\n");
-//						DealOption dp = new DealOption(rule_set.get(i),pcaket_tmp,detect);
-//						detect = dp.run();
-//						fw.write("after detect\n");
-//						fw.flush();
-//						} catch (IOException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
-						
-//					}
-					//检测规则头匹配的效率
-//					rule_set.get(i).match(pcaket_tmp);
-//					duringTime = System.currentTimeMillis()-startTime;
-//					if((duringTime) % 100000 == 0)
-//						//System.out.println("time:"+duringTime+";pktlen:"+pktlen+";packet:"+packnum);
-//					
-//				}
-				this.outputCollector.emit(new Values(packnum, detect, pktlen));
 				
 				////System.out.println("pkheader.protocol:"+pcaket_tmp.protocol+" pkheader.sip:"+pcaket_tmp.sip+" pkheader.sport:"+pcaket_tmp.sport+" pkheader.dip:"+pcaket_tmp.dip+" pkheader.dport:"+pcaket_tmp.dport);
 			}
 			else if(name.equals("rule") )
-			{				
-				
+			{			
 				transfer = (Boolean)tuple.getValueByField("switch");
 				if(transfer) {
-					////System.out.println("transfer==true");
-					//打印出rule_set的内容
-					//System.out.println("in payload bolt:");
-					for(int i = 0; i < rule_set.size(); i++) {
-						//System.out.println("the "+i+ " rule is:"+rule_set.get(i).action+" "+rule_set.get(i).action+" "+rule_set.get(i).sip+" "+rule_set.get(i).sport+" "+rule_set.get(i).dip+" "+rule_set.get(i).dport);
-						
-					}
 					return;
 				}
 				////System.out.println("rule bolt for rule");
@@ -216,8 +136,7 @@ public class Payload_Bolt implements IBasicBolt{
 				rule_tmp.rule_option=(ArrayList)tuple.getValueByField("option");
 				//get parsed_rule_option
 				rule_tmp.parsed_rule_option = parseRuleOption(rule_tmp.rule_option);
-				rule_set.add(rule_tmp);			
-				
+				rule_set.add(rule_tmp);							
 			}
 		} catch(FailedException e) {
 	    	//System.out.println("in payloadBolt"+e.getMessage());
@@ -240,10 +159,8 @@ public class Payload_Bolt implements IBasicBolt{
 			String hex=Integer.toHexString(a[i]&0xFF);
 			if(hex.length()==1){
         		hex ='0'+hex;
-        	}
-			
-				cer=cer+hex;
-			
+        	}		
+				cer=cer+hex;		
 		}
 		return cer;
 	}
@@ -301,19 +218,15 @@ public class Payload_Bolt implements IBasicBolt{
 				 int block_len = block.length;
 				 for (int k = 0; k < block_len - 1; k++) {
 					 String first = block[k].split(":")[0];
-					 ////System.out.println("the first is"+first);
 					 if(!isIgnore(first)){
 						 String second ="";
 						 if(block[k].split(":").length>1)
-							  second =block[k].split(":")[1];				 
-						 ////System.out.println("the second is"+second);
+							  second =block[k].split(":")[1];			
 						 if(first.equals("")){
 							 aContent.put(" content", second);
-							 //fw.write("content"+":"+second);
 						 }
 						 else{
 							 aContent.put(first,second);
-							 //fw.write(first+":"+second);
 						 }
 					 }
 				 }//对一个content内的选项进行创建

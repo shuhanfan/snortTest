@@ -219,7 +219,7 @@ public static boolean addrMatch(int pk_addr, int ip_type, int ip_val , int ip_ma
 		boolean isInter = ((pk_addr >= 167772160 && pk_addr <= 184549375)||
 				(pk_addr >= -1408237568 && pk_addr <= -1407188993) ||
 				(pk_addr >= -1062731776 && pk_addr <= -1062666241));
-		System.out.println("the isInter is:" + isInter);
+		//System.out.println("the isInter is:" + isInter);
 		if(isInter) {
 			if(ip_type == -2)
 				return true;
@@ -240,12 +240,13 @@ public static boolean addrMatch(int pk_addr, int ip_type, int ip_val , int ip_ma
 	}
 }
 
-	public boolean portMatch(int pk_port, int port_type, int port_val, int port_low, int port_high) {
+
+public boolean portMatch(int pk_port, int port_type, int port_val, int port_low, int port_high) {
 		if(port_type == 0) //any
 			return true;
 		else if(port_type == 1){//正
 			if(port_val != -1) {//单值
-				if(sport_val == pk_port)
+				if(port_val == pk_port)
 					return true;
 				return false;
 			}
@@ -257,7 +258,7 @@ public static boolean addrMatch(int pk_addr, int ip_type, int ip_val , int ip_ma
 		}
 		else{//负
 			if(port_val != -1) {//单值
-				if(sport_val == pk_port)
+				if(port_val == pk_port)
 					return false;
 				return true;
 			}

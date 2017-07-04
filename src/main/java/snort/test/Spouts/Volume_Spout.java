@@ -74,11 +74,12 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 	private int timeout = 10 ; // 10 seconds in millis
 	private long pktlen = 0;//record the transport flow
 	private int count = 0;
-	private int count2 = 0;
-	private int count1 = 0;
-	private long lastTime = 0;
+	
+	private long lastTime = -1;
+	private long curTime = -1;
+	private long duringTime = 0;
+	private int packnum = 0;
 	private CreateValue cv;
-	long start = 0;
 	
 	//public FileWriter fw;
 	
@@ -204,8 +205,6 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 		// TODO Auto-generated method stub
 		this.outputCollector = spoutOutputCollector;		
         try { 
-        	start = System.nanoTime();
-        	lastTime = System.nanoTime();
         	cv = new CreateValue();
         //从kafka队列获取专用：流量（根据topic以及consumer config的内容）
 //        	this.consumer = kafka.consumer.Consumer.createJavaConsumerConnector(
@@ -237,7 +236,6 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 			 //hdr = new PcapHeader(JMemory.POINTER);  
 			 //buf = new JBuffer(JMemory.POINTER);
 			 packet=new PcapPacket(JMemory.POINTER);
-			 lastTime = System.currentTimeMillis();
         	}
         	else
         	{
@@ -256,7 +254,6 @@ public class Volume_Spout implements Serializable,IRichSpout  {
         			System.err.printf("Error while opening device for capture: "+ errbuf.toString());
         			return;
         		}
-        	lastTime = System.currentTimeMillis();
 			id = JRegistry.mapDLTToId(pcap.datalink());
 			 //hdr = new PcapHeader(JMemory.POINTER);  
 			 //buf = new JBuffer(JMemory.POINTER);
@@ -286,17 +283,9 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 			//device获取用if(pcap.nextEx(packet)==1)
 		    if(pcap.nextEx(packet)==1)
 			{
-		    	//效率测试
-		    	/*
-		    	long curtime = System.nanoTime();
-		    	if(curtime-start<= 1000*1000*1000)
-		    		count++;
-		    	else{
-		    		start = System.nanoTime();
-		    		System.out.println("count:"+count);
-		    		count=0;
-		    	}
-		    	*/
+		    	
+		    	
+		    	
 		    	
 //		    	count2++;
 //		    	long curtime = System.nanoTime();		    	
@@ -316,6 +305,19 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 		        
 //				
 		    	cv.anal(packet);
+		    	//测试发送速率
+		    	
+		    	packnum++;
+		    	curTime = System.currentTimeMillis()/1000;
+		    	duringTime = curTime - lastTime;
+		    	
+		    	//System.out.println("duringTime is:"+duringTime);
+		    	if(duringTime >= 1 || lastTime == -1) {
+		    		System.out.println("in volumeSpout(pps):"+packnum+"/"+curTime+"s");
+		    		lastTime = curTime;
+		    		packnum = 0;
+		    	}
+		    	
 //		    	System.out.println("the sip is:"+cv.sip);
 //		        System.out.println("the dip is:"+cv.dip);
 //		    	System.out.println("the proto is:"+cv.protocol);
@@ -482,7 +484,7 @@ public class Volume_Spout implements Serializable,IRichSpout  {
 //        		
 //		    	this.outputCollector.emit("volume", new Values(1));
        		this.outputCollector.emit("volume",new Values(cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.dsize,cv.ip_proto,cv.DF,cv.MF,cv.Reserved,cv.fragoffset,cv.ttl,cv.tos,cv.id,cv.flags,cv.seq,cv.ack,cv.window,cv.sameip,cv.payload,cv.total_len));
-				///***///
+       	   
         		//this.outputCollector.emit("volume",new Values(cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol,cv.sip,cv.sport,cv.dip,cv.dport,cv.protocol));
         		//System.out.println("protocol:"+cv.protocol+",sip:"+cv.sip+",sport:"+cv.sport+",dip:"+cv.dip+",dport:"+cv.dport+",dsize:"+cv.dsize+",ip_proto:"+cv.ip_proto+",DF:"+cv.DF+",MF:"+cv.MF+",Reserved:"+cv.Reserved+",cv.fragoffset:"+cv.fragoffset+",cv.ttl:"+cv.ttl+",cv.tos:"+cv.tos+",cv.id:"+cv.id+",cv.flags"+cv.flags+",cv.seq:"+cv.seq+",cv.ack:"+cv.ack+",cv.window:"+cv.window+",cv.sameip:"+cv.sameip);
 

@@ -68,11 +68,12 @@ public class PcapTopo4jnetpcap {
 			 builder.setBolt("RuleBolt1", new Rule_Bolt("RuleBolt1"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
 //			 builder.setBolt("RuleBolt2", new Rule_Bolt("RuleBolt2"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
 //			 builder.setBolt("RuleBolt3", new Rule_Bolt("RuleBolt3"),1).allGrouping("RuleSpout","rule").shuffleGrouping("VolumeSpout","volume");
-//			 builder.setBolt("PayloadBolt1", new Payload_Bolt(),1).allGrouping("RuleSpout","rule").allGrouping("RuleBolt1","payload");
+			 builder.setBolt("PayloadBolt1", new Payload_Bolt(),1).allGrouping("RuleSpout","rule").allGrouping("RuleBolt1","payload");
 //			 builder.setBolt("PayloadBolt2", new Payload_Bolt(),1).allGrouping("RuleSpout","rule").allGrouping("RuleBolt2","payload");
 //			 builder.setBolt("PayloadBolt3", new Payload_Bolt(),1).allGrouping("RuleSpout","rule").allGrouping("RuleBolt3","payload");			 
 //			 builder.setBolt("ResultBolt", new Result_Bolt(),1).allGrouping("RuleBolt1","result").allGrouping("RuleBolt2","result").allGrouping("RuleBolt3","result").allGrouping("PayloadBolt1").allGrouping("PayloadBolt2").allGrouping("PayloadBolt3");
-//			
+			builder.setBolt("ResultBolt", new Result_Bolt(),1).allGrouping("RuleBolt1","result").allGrouping("PayloadBolt1","result2").allGrouping("PayloadBolt1", "detail");
+				
 			 
 			 //builder.setSpout("PcapSpout4jnetpcap1", new PcapSpout4jnetpcap(null,-1,null,null,null,-1,"topic2"), 1);
 			 //builder.setSpout("PcapSpout4jnetpcap2", new PcapSpout4jnetpcap2(null,-1,null,null,null,-1,"topic5"), 1);

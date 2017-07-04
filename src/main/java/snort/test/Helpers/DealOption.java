@@ -26,7 +26,8 @@ public class DealOption {
 	//byte[] payload;
 	public Packet_Header ph;
 	public ArrayList<RuleOption > parsed_rules;//解析后的规则选项列表
-	int detect = 0;
+	//int detect = 0;
+	String msg = "";
 	//public static FileWriter fw;
 	//public FileWriter fw1;
 	public DealOption(){		
@@ -194,6 +195,8 @@ public class DealOption {
 		 boolean negative = false;
 		 boolean isString = false;
 		 //System.out.println("the value in KMP is:"+value);
+		 if("".equals(value) || value == null)
+			 return 0;
 		 if(value.charAt(1)=='!') {
 			 negative = true;
 			 value = value.substring(2,value.length()-1);
@@ -352,6 +355,9 @@ public class DealOption {
 									 
 								 break;
 							 }
+//							 System.out.println("the oris:"+oris);
+//							 System.out.println("the newstart:"+newstart);
+//							 System.out.println("the p is:"+p);
 							 String tmp = oris.substring(newstart/2, newstart/2+p.length());
 							 if(ignoreCase) {
 								 tmp = tmp.toLowerCase();
@@ -454,7 +460,7 @@ public class DealOption {
 			    			 //fw.flush();
 			    			 //System.out.println("! and equal");
 			    			 
-			    			 return;
+			    			 return ;
 
 			    		 }
 			    			 
@@ -1089,7 +1095,7 @@ public class DealOption {
 				
 				
 			}
-			detect++;
+			msg = ro.headMap.get(" msg");
 			//System.out.println("detect instruction!");
 //		   fw1.write("detect instruction!\n");
 //	       fw1.write("the rule is:"+ro.headMap.get("msg")+" "+rh.sip+" "+rh.sport+" "+rh.dip+" "+rh.dport+" "+rh.protocol+"\n");
@@ -1108,7 +1114,7 @@ public class DealOption {
 		
 	 }
 	
-	public int run(){
+	public String run(){
 //		try {
 //			////fw.write("in dealOption\n");
 //			//fw.flush();
@@ -1118,10 +1124,12 @@ public class DealOption {
 //		}
 		for(int i=0; i<parsed_rules.size(); i++){//遍历规则选项链表，检测数据包
 			RuleOption ro =parsed_rules.get(i);
-			Detect(ro, ph.payload);			
+			Detect(ro, ph.payload);	
+			if(!"".equals(msg))
+				return msg;
 		}
 		//System.out.println("the detect num is:"+detect);
-		return detect;
+		return msg;
 		/*
 		//打印一下规则
 		

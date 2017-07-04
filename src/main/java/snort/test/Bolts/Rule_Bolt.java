@@ -34,6 +34,8 @@ public class Rule_Bolt implements IBasicBolt{
 	private String name_bolt;
 	private long pktlen = 0;//record the transport flow
 	private int packnum =0;
+	private int receivednum = 0;
+	private int payloadnum = 0;
 	//private int detect = 0;
 	  //private int ruleBoltType = 0;
 	
@@ -53,8 +55,8 @@ public class Rule_Bolt implements IBasicBolt{
 	}
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		// TODO Auto-generated method stub
-		declarer.declareStream("result",new Fields("packnum", "flow"));
-		declarer.declareStream("payload",new Fields("ruleNumber","dsize","ip_proto","DF","MF","Reserved","fragoffset","ttl","tos","id","flags","seq","ack","window","sameip","payload","total_len"));
+		declarer.declareStream("result",new Fields("time","packnum", "flow"));
+		declarer.declareStream("payload",new Fields("ruleNumber","protocol","sip","sport","dip","dport","dsize","ip_proto","DF","MF","Reserved","fragoffset","ttl","tos","id","flags","seq","ack","window","sameip","payload","total_len"));
 		//outputFieldsDeclarer.declareStream("volume",new Fields("protocol","sip","sport","dip","dport"));
 		//declarer.declare(new Fields("payload"));
 	}
@@ -118,30 +120,45 @@ public class Rule_Bolt implements IBasicBolt{
 		outputCollector.setContext(tuple);  
 		String name=tuple.getSourceStreamId();  
 		try {
-			//System.out.println("in rule_bolt of execute");			
+			//System.out.println("in rule_bolt of execute");
+			//每s固定发一次给ResultBolt
+			curTime = System.currentTimeMillis()/1000;
+			duringTime = curTime -lastTime;
+			//System.out.println("duringTime in rulebolt is:"+duringTime);
+	    	if(duringTime>=1) {
+	    		this.outputCollector.emit("result",new Values(curTime, packnum, pktlen));
+	    		//测试从volumeSpout发送到result接收的速率
+	    	    System.out.println("in RuleBolt to result(pps):"+packnum+"/"+curTime+"s");
+	    		receivednum =0;
+	    		pktlen = 0;
+	    		packnum= 0;
+	    		lastTime = curTime;
+	    	}
 			if(name.equals("volume")){
 				if (!transfer)
 					return;				
 				
 				boolean matched = false;
 				//System.out.println("rule bolt for vol");
-				
+				receivednum++;
 				//测试rule_bolt的整体效率pps
 				
-				packnum++;
+				/*
 				curTime = System.currentTimeMillis()/1000;
 				duringTime = curTime -lastTime;
 		    	if(duringTime>=1) {
-		    		System.out.println("count(pps):"+packnum);
+		    		System.out.println("in Rule Bolt count(pps):"+packnum);
 		    		packnum =0;
 		    		lastTime = curTime;
 		    	}
+		    	*/
+		    	
 		    		
 		    	
 				
 				//测试rule_bolt的处理一个包的时长
 		    	/*
-				curTime = System.nanoTime();
+				curTime = System.currentTimeMillis();
 				duringTime = curTime - lastTime;
 				lastTime = curTime;
 				System.out.println("in rule_bolt period is:"+duringTime);
@@ -188,33 +205,35 @@ public class Rule_Bolt implements IBasicBolt{
 					//System.out.println("the rule is"+rule_set.get(i).action+" "+rule_set.get(i).action+" "+rule_set.get(i).sip+" "+rule_set.get(i).sport+" "+rule_set.get(i).dip+" "+rule_set.get(i).dport);
 					
 					if(rule_set.get(i).match(pcaket_tmp)){//选择规则选项匹配的规则进行处理
+						//测试发送给Payload_Bolt的效率
 						
+						payloadnum++;
+						curTime = System.currentTimeMillis()/1000;
+						duringTime = curTime -lastTime;
+				    	if(duringTime>=1) {
+				    		System.out.println("in RuleBolt send to PayloadBolt count(pps):"+payloadnum+"/"+curTime+"s");
+				    		payloadnum =0;
+				    		lastTime = curTime;
+				    	}
+				    	
+				    	
+				    	
 						
-						this.outputCollector.emit("payload",new Values(i,pcaket_tmp.dsize,pcaket_tmp.ip_proto,pcaket_tmp.DF,pcaket_tmp.MF,pcaket_tmp.Reserved,pcaket_tmp.fragoffset,pcaket_tmp.ttl,pcaket_tmp.tos,pcaket_tmp.id,pcaket_tmp.flags,pcaket_tmp.seq,pcaket_tmp.ack,pcaket_tmp.window,pcaket_tmp.sameip,pcaket_tmp.payload,total_len));
+						this.outputCollector.emit("payload",new Values(i,pcaket_tmp.protocol,pcaket_tmp.sip,pcaket_tmp.sport,pcaket_tmp.dip,pcaket_tmp.dport,pcaket_tmp.dsize,pcaket_tmp.ip_proto,pcaket_tmp.DF,pcaket_tmp.MF,pcaket_tmp.Reserved,pcaket_tmp.fragoffset,pcaket_tmp.ttl,pcaket_tmp.tos,pcaket_tmp.id,pcaket_tmp.flags,pcaket_tmp.seq,pcaket_tmp.ack,pcaket_tmp.window,pcaket_tmp.sameip,pcaket_tmp.payload,total_len));
 						
 						matched = true;
 						
-//						try {
-//							fw.write("the ruleset header match the packet header\n");
-//						
-//						fw.write("before detect\n");
-//						DealOption dp = new DealOption(rule_set.get(i),pcaket_tmp,detect);
-//						detect = dp.run();
-//						fw.write("after detect\n");
-//						fw.flush();
-//						} catch (IOException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
-						
 					}
-					//检测规则头匹配的效率
-//					rule_set.get(i).match(pcaket_tmp);
+					
 					
 //					
 				}
+				//逻辑改为每一秒再固定发一次
+				
 				if(!matched)
-					this.outputCollector.emit("result",new Values(packnum, pktlen));
+					packnum++;
+					
+				
 				
 				//测试rule_header_match函数的效率
 				/*
@@ -348,9 +367,10 @@ public class Rule_Bolt implements IBasicBolt{
 	public static Rule_Header parseRuleHeader(Rule_Header rule_tmp) {
 		//parse sport
 		String sport = rule_tmp.sport;
-		if(sport.equals("any")) {
+		if(sport.equals("any")|| sport.contains("$")){
 			rule_tmp.sport_type = 0;
 		}
+		
 		else {
 			if(sport.substring(0, 1).equals("!")) {
 				rule_tmp.sport_type = -1;//是非值
@@ -359,6 +379,8 @@ public class Rule_Bolt implements IBasicBolt{
 					rule_tmp.sport_val = Integer.parseInt(sport);
 				}
 				else{//是一个范围
+					if(sport.substring(0,1).equals("["))
+						sport = sport.substring(1,sport.length()-1);//将[]去除
 					rule_tmp.sport_val = -1;
 					String[] ports = sport.split(":");
 					if(ports.length == 1){//500:
@@ -384,6 +406,8 @@ public class Rule_Bolt implements IBasicBolt{
 					rule_tmp.sport_val = Integer.parseInt(sport);
 				}
 				else{//是一个范围
+					if(sport.substring(0,1).equals("["))
+						sport = sport.substring(1,sport.length()-1);//将[]去除
 					rule_tmp.sport_val = -1;
 					String[] ports = sport.split(":");
 					if(ports.length == 1){//500:
@@ -408,9 +432,14 @@ public class Rule_Bolt implements IBasicBolt{
 		
 		//parse dport
 		String dport = rule_tmp.dport;
-		if(dport.equals("any")) {
+		if(dport.equals("any")|| dport.contains("$")) {
 			rule_tmp.dport_type = 0;
 		}
+		else if(dport.equals("$HTTP_PORTS")){
+			rule_tmp.dport_type = 1;
+			rule_tmp.dip_val = 80;
+		}
+			
 		else {
 			if(dport.substring(0, 1).equals("!")) {
 				rule_tmp.dport_type = -1;//是非值
@@ -419,7 +448,10 @@ public class Rule_Bolt implements IBasicBolt{
 					rule_tmp.dport_val = Integer.parseInt(dport);
 				}
 				else{//是一个范围
+					
 					rule_tmp.dport_val = -1;
+					if(dport.substring(0,1).equals("["))
+						dport = dport.substring(1,dport.length()-1);//将[]去除
 					String[] ports = dport.split(":");
 					if(ports.length == 1){//500:
 						rule_tmp.dport_low = Integer.parseInt(ports[0]);
@@ -444,6 +476,8 @@ public class Rule_Bolt implements IBasicBolt{
 					rule_tmp.dport_val = Integer.parseInt(dport);
 				}
 				else{//是一个范围
+					if(dport.substring(0,1).equals("["))
+						dport = dport.substring(1,dport.length()-1);//将[]去除
 					rule_tmp.dport_val = -1;
 					String[] ports = dport.split(":");
 					if(ports.length == 1){//500:
@@ -468,14 +502,15 @@ public class Rule_Bolt implements IBasicBolt{
 		
 		//parse sip
 		String sip = rule_tmp.sip;
-		if(sip.equals("any")) {
-			rule_tmp.sip_type = 0;
-		}
-		else if(sip.equals("$HOME_NET")) {//内网
+		
+		if(sip.equals("$HOME_NET") ) {//内网
 			rule_tmp.sip_type = -2;
 		}
 		else if(sip.equals("$EXTERNAL_NET")) {//外网
 			rule_tmp.sip_type = 2;
+		}
+		else if(sip.equals("any") || sip.contains("$")) {
+			rule_tmp.sip_type = 0;
 		}
 		else {
 			if(sip.substring(0,1).equals("!")) {//非
@@ -508,15 +543,17 @@ public class Rule_Bolt implements IBasicBolt{
 		
 		//parse dip
 		String dip = rule_tmp.dip;
-		if(dip.equals("any")) {
-			rule_tmp.dip_type = 0;
-		}
-		else if(dip.equals("$HOME_NET")) {//内网
+		
+		if(dip.equals("$HOME_NET") ) {//内网
 			rule_tmp.dip_type = -2;
 		}
 		else if(dip.equals("$EXTERNAL_NET")) {//外网
 			rule_tmp.dip_type = 2;
 		}
+		else if(dip.equals("any")||dip.contains("$")) {
+			rule_tmp.dip_type = 0;
+		}
+		
 		else {
 			if(dip.substring(0,1).equals("!")) {//非
 		
